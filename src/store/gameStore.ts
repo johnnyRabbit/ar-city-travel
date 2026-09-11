@@ -47,13 +47,24 @@ function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: nu
   const playerNodeId = findNearestNode(playerLat, playerLng);
   const path = findPath(streetGraph, zombieNodeId, playerNodeId);
 
-  console.log(`[Zombie ${zombie.id}] Path: ${zombieNodeId} -> ${playerNodeId} = [${path.join(', ')}]`);
+  console.log(`[Zombie ${zombie.id}] Path: ${zombieNodeId} -> ${playerNodeId} = [${path.join(', ')}] (length: ${path.length})`);
+
+  // If path is too short or invalid, return zombie unchanged
+  if (path.length < 2) {
+    console.warn(`[Zombie ${zombie.id}] Invalid path: ${path.join(', ')}`);
+    return zombie;
+  }
+
+  // Find where the zombie currently is in the new path
+  let startIndex = path.indexOf(zombieNodeId);
+  if (startIndex === -1) startIndex = 0;
 
   return {
     ...zombie,
+    // Keep current position - don't snap to node
     path,
-    currentNodeIndex: 0,
-    targetNodeId: path.length > 1 ? path[1] : path[0],
+    currentNodeIndex: startIndex,
+    targetNodeId: path[startIndex + 1] || path[path.length - 1],
     lastRecalcTime: Date.now(),
   };
 }
@@ -61,36 +72,42 @@ function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: nu
 function moveZombieAlongPath(zombie: Zombie): Zombie {
   if (!zombie.path || zombie.path.length === 0) return zombie;
 
+  // Get current target node coordinates
   const targetCoords = getNodeCoords(zombie.targetNodeId || zombie.path[zombie.path.length - 1]);
   if (!targetCoords) return zombie;
 
+  // Calculate direction to target
   const dLat = targetCoords.lat - zombie.lat;
   const dLng = targetCoords.lng - zombie.lng;
   const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-  const moveSpeed = zombie.speed * 2; // Aumentar velocidade
+  const moveSpeed = zombie.speed;
 
-  // Threshold para considerar que chegou ao nó (10 metros)
-  if (dist < 0.0001) {
+  // Check if zombie reached the current target node
+  if (dist < 0.00008) {
+    // Advance to next node in path
     const nextIndex = zombie.currentNodeIndex + 1;
+
     if (nextIndex < zombie.path.length) {
-      const nextNodeCoords = getNodeCoords(zombie.path[nextIndex]);
-      if (nextNodeCoords) {
-        return {
-          ...zombie,
-          lat: nextNodeCoords.lat,
-          lng: nextNodeCoords.lng,
-          currentNodeIndex: nextIndex,
-          targetNodeId: nextIndex + 1 < zombie.path.length ? zombie.path[nextIndex + 1] : zombie.path[zombie.path.length - 1],
-        };
-      }
+      // Set new target but DON'T teleport - keep current position
+      const newTargetId = zombie.path[nextIndex];
+      return {
+        ...zombie,
+        currentNodeIndex: nextIndex,
+        targetNodeId: newTargetId,
+        // Keep current lat/lng - will move smoothly next tick
+      };
     }
-    // Reached end of path
-    return { ...zombie, lat: targetCoords.lat, lng: targetCoords.lng };
+    // Reached end of path - stay here
+    return zombie;
   }
 
-  // Move towards target
-  const newLat = zombie.lat + (dLat / dist) * moveSpeed;
-  const newLng = zombie.lng + (dLng / dist) * moveSpeed;
+  // Move smoothly towards target (don't overshoot)
+  const stepLat = (dLat / dist) * moveSpeed;
+  const stepLng = (dLng / dist) * moveSpeed;
+
+  // Don't move past the target
+  const newLat = Math.abs(stepLat) > Math.abs(dLat) ? targetCoords.lat : zombie.lat + stepLat;
+  const newLng = Math.abs(stepLng) > Math.abs(dLng) ? targetCoords.lng : zombie.lng + stepLng;
 
   return { ...zombie, lat: newLat, lng: newLng };
 }
@@ -125,10 +142,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   updateZombies: () => {
     const { player, zombies } = get();
-    const now = Date.now();
 
     if (zombies.length === 0) return;
-    console.log(`[GameLoop] Updating ${zombies.length} zombies...`);
 
     const updatedZombies = zombies.map((z) => {
       if (!z.active) return z;
@@ -142,19 +157,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       let updatedZombie = z;
 
-      // Recalculate path every 3 seconds or if no path
-      if (now - z.lastRecalcTime > 3000 || !z.path || z.path.length === 0) {
+      // Only calculate path if zombie has no path or reached end
+      if (!z.path || z.path.length < 2 || z.currentNodeIndex >= z.path.length - 1) {
         updatedZombie = calculatePathForZombie(z, player.lat, player.lng);
       }
 
-      // Move along path
+      // Move along path smoothly
       updatedZombie = moveZombieAlongPath(updatedZombie);
-
-      // If reached end of path or path is invalid, recalculate
-      if (updatedZombie.currentNodeIndex >= updatedZombie.path.length - 1 || !updatedZombie.targetNodeId) {
-        console.log(`[Zombie ${updatedZombie.id}] Reached end of path, recalculating...`);
-        updatedZombie = calculatePathForZombie(updatedZombie, player.lat, player.lng);
-      }
 
       return updatedZombie;
     });
@@ -260,7 +269,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const spawnCoords = getNodeCoords(spawnNodeId);
       if (!spawnCoords) continue;
 
-      // Create zombie at spawn node
+      // Create zombie EXACTLY at spawn node coordinates
       let zombie: Zombie = {
         id: `zombie-${Date.now()}-${i}`,
         name: template.name,
@@ -281,13 +290,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Calculate initial path
       zombie = calculatePathForZombie(zombie, player.lat, player.lng);
 
-      // Fallback: if path is invalid, set a direct target
-      if (!zombie.path || zombie.path.length < 2) {
-        const playerNodeId = findNearestNode(player.lat, player.lng);
-        zombie.path = [spawnNodeId, playerNodeId];
-        zombie.targetNodeId = playerNodeId;
-        zombie.currentNodeIndex = 0;
+      // Ensure zombie starts at the first node of the path
+      if (zombie.path.length >= 2) {
+        const firstNodeCoords = getNodeCoords(zombie.path[0]);
+        if (firstNodeCoords) {
+          zombie.lat = firstNodeCoords.lat;
+          zombie.lng = firstNodeCoords.lng;
+        }
       }
+
+      console.log(`[Spawn] Zombie ${zombie.id} at ${spawnNodeId}, path: [${zombie.path.join(', ')}]`);
 
       get().addZombie(zombie);
     }

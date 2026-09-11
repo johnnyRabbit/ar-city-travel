@@ -166,12 +166,16 @@ function heuristic(lat1: number, lng1: number, lat2: number, lng2: number): numb
 export function findPath(
   graph: Map<string, { nodeId: string; distance: number }[]>,
   startId: string,
-  endId: string
+  endId: string,
+  allowIntermediate: boolean = true
 ): string[] {
   const nodeMap = new Map(streetNodes.map((n) => [n.id, n]));
   const startNode = nodeMap.get(startId);
   const endNode = nodeMap.get(endId);
-  if (!startNode || !endNode) return [startId];
+  if (!startNode || !endNode) {
+    console.warn(`[Pathfinding] Invalid start or end node: ${startId} -> ${endId}`);
+    return [startId];
+  }
 
   const openSet = new Set<string>([startId]);
   const cameFrom = new Map<string, string>();
@@ -186,14 +190,22 @@ export function findPath(
   gScore.set(startId, 0);
   fScore.set(startId, heuristic(startNode.lat, startNode.lng, endNode.lat, endNode.lng));
 
-  while (openSet.size > 0) {
+  let iterations = 0;
+  const maxIterations = 1000; // Prevent infinite loops
+
+  while (openSet.size > 0 && iterations < maxIterations) {
+    iterations++;
+    
     let current: string | null = null;
     let lowestF = Infinity;
     for (const nodeId of openSet) {
       const f = fScore.get(nodeId) || Infinity;
       if (f < lowestF) { lowestF = f; current = nodeId; }
     }
-    if (current === null || current === endId) break;
+    
+    if (current === null) break;
+    if (current === endId) break;
+    
     openSet.delete(current);
 
     const neighbors = graph.get(current) || [];
@@ -211,10 +223,57 @@ export function findPath(
     }
   }
 
+  // Reconstruct path
   const path: string[] = [];
   let current: string | undefined = endId;
-  while (current) { path.unshift(current); current = cameFrom.get(current); }
-  return path[0] === startId ? path : [startId];
+  while (current) { 
+    path.unshift(current); 
+    current = cameFrom.get(current); 
+  }
+  
+  let validPath = path[0] === startId ? path : null;
+  
+  // If pathfinding failed, try to find a path through intermediate nodes (only if allowed)
+  if (allowIntermediate && (!validPath || validPath.length < 3)) {
+    console.warn(`[Pathfinding] Direct path failed, trying intermediate nodes...`);
+    
+    // Find intermediate nodes that are roughly between start and end
+    const startCoords = nodeMap.get(startId)!;
+    const endCoords = nodeMap.get(endId)!;
+    const midLat = (startCoords.lat + endCoords.lat) / 2;
+    const midLng = (startCoords.lng + endCoords.lng) / 2;
+    
+    // Find nodes near the midpoint
+    const intermediateNodes = streetNodes
+      .map(n => ({ id: n.id, dist: calculateDistance(n.lat, n.lng, midLat, midLng) }))
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 3)
+      .map(n => n.id);
+    
+    // Try to build a path through intermediate nodes
+    for (const midNode of intermediateNodes) {
+      if (midNode === startId || midNode === endId) continue;
+      
+      const path1 = findPath(graph, startId, midNode, false);
+      const path2 = findPath(graph, midNode, endId, false);
+      
+      if (path1[0] === startId && path2[0] === midNode) {
+        validPath = [...path1, ...path2.slice(1)];
+        console.log(`[Pathfinding] Found path through ${midNode}: ${validPath.length} nodes`);
+        break;
+      }
+    }
+  }
+  
+  // Final fallback
+  if (!validPath || validPath.length < 2) {
+    validPath = [startId, endId];
+    console.warn(`[Pathfinding] Using direct fallback: [${startId}, ${endId}]`);
+  }
+  
+  console.log(`[Pathfinding] ${startId} -> ${endId}: ${validPath.length} nodes, ${iterations} iterations`);
+  
+  return validPath;
 }
 
 export function findNearestNode(lat: number, lng: number): string {

@@ -10,8 +10,10 @@ export default function ZombiePaths() {
       {zombies
         .filter((z) => z.active && z.path.length > 1)
         .map((zombie) => {
+          // Build path from current position through remaining nodes
           const pathCoords: [number, number][] = [[zombie.lat, zombie.lng]];
 
+          // Add all remaining nodes in the path
           for (let i = zombie.currentNodeIndex + 1; i < zombie.path.length; i++) {
             const coords = getNodeCoords(zombie.path[i]);
             if (coords) pathCoords.push([coords.lat, coords.lng]);
@@ -19,15 +21,18 @@ export default function ZombiePaths() {
 
           if (pathCoords.length < 2) return null;
 
+          // Debug log
+          console.log(`[ZombiePath] ${zombie.id}: ${pathCoords.length} points, path=[${zombie.path.join(', ')}]`);
+
           return (
             <Polyline
               key={`zombie-path-${zombie.id}`}
               positions={pathCoords}
               pathOptions={{
                 color: '#EF4444',
-                weight: 2,
-                opacity: 0.4,
-                dashArray: '4, 8',
+                weight: 3,
+                opacity: 0.6,
+                dashArray: '5, 10',
               }}
             />
           );
