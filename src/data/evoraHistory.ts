@@ -169,10 +169,10 @@ export const historicalEvents: HistoricalEvent[] = [
 ];
 
 export const zombieTemplates = [
-  { name: 'Legionário Romano', era: 'romano' as const, emoji: '🗡️', speed: 0.00015 },
-  { name: 'Guerreiro Visigodo', era: 'visigodo' as const, emoji: '🛡️', speed: 0.00018 },
-  { name: 'Soldado Mouro', era: 'mouro' as const, emoji: '🏹', speed: 0.0002 },
-  { name: 'Cavaleiro Medieval', era: 'medieval' as const, emoji: '⚔️', speed: 0.00017 },
-  { name: 'Inquisidor', era: 'renascimento' as const, emoji: '📿', speed: 0.00016 },
-  { name: 'Soldado Francês', era: 'moderno' as const, emoji: '🎖️', speed: 0.00022 },
+  { name: 'Legionário Romano', era: 'romano' as const, emoji: '🗡️', speed: 0.0003 },
+  { name: 'Guerreiro Visigodo', era: 'visigodo' as const, emoji: '🛡️', speed: 0.00035 },
+  { name: 'Soldado Mouro', era: 'mouro' as const, emoji: '🏹', speed: 0.0004 },
+  { name: 'Cavaleiro Medieval', era: 'medieval' as const, emoji: '⚔️', speed: 0.00033 },
+  { name: 'Inquisidor', era: 'renascimento' as const, emoji: '📿', speed: 0.00032 },
+  { name: 'Soldado Francês', era: 'moderno' as const, emoji: '🎖️', speed: 0.00045 },
 ];

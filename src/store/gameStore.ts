@@ -47,7 +47,8 @@ function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: nu
   const playerNodeId = findNearestNode(playerLat, playerLng);
   const path = findPath(streetGraph, zombieNodeId, playerNodeId);
 
-  console.log(`[Zombie ${zombie.id}] Path: ${zombieNodeId} -> ${playerNodeId} = [${path.join(', ')}] (length: ${path.length})`);
+  const distToPlayer = calculateDistance(zombie.lat, zombie.lng, playerLat, playerLng);
+  console.log(`[Zombie ${zombie.id}] Dist: ${distToPlayer.toFixed(0)}m, Path: ${zombieNodeId} -> ${playerNodeId} = [${path.join(', ')}] (length: ${path.length})`);
 
   // If path is too short or invalid, return zombie unchanged
   if (path.length < 2) {
@@ -157,8 +158,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       let updatedZombie = z;
 
-      // Only calculate path if zombie has no path or reached end
-      if (!z.path || z.path.length < 2 || z.currentNodeIndex >= z.path.length - 1) {
+      // If zombie is very close to player (less than 30m), move directly to player
+      if (distToPlayer < 30) {
+        // Move directly towards player (no pathfinding needed)
+        const dLat = player.lat - z.lat;
+        const dLng = player.lng - z.lng;
+        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+        
+        if (dist > 0.00001) {
+          const stepLat = (dLat / dist) * z.speed;
+          const stepLng = (dLng / dist) * z.speed;
+          
+          updatedZombie = {
+            ...z,
+            lat: z.lat + stepLat,
+            lng: z.lng + stepLng,
+          };
+        }
+        
+        return updatedZombie;
+      }
+
+      // Recalculate path if:
+      // - No path exists
+      // - Path is too short
+      // - Reached end of path
+      // - Close to player (less than 50m) - recalculate every time to follow player
+      const needsRecalc = !z.path || z.path.length < 2 || 
+                          z.currentNodeIndex >= z.path.length - 1 ||
+                          distToPlayer < 50;
+
+      if (needsRecalc) {
         updatedZombie = calculatePathForZombie(z, player.lat, player.lng);
       }
 
