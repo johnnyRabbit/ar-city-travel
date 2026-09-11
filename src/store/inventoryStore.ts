@@ -10,7 +10,7 @@ interface InventoryStore {
   maxShieldHP: number;
 
   // Actions
-  collectMapItem: (mapItemId: string) => void;
+  collectMapItem: (mapItemId: string) => { type: string; amount?: number; def?: any } | void;
   useItem: (inventoryItemId: string) => { type: string; amount?: number } | void;
   tickEffects: (deltaMs: number) => void;
   spawnMapItem: (lat: number, lng: number, defId?: string) => void;

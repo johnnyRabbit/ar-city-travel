@@ -51,22 +51,22 @@ export default function PowerUpMarkers() {
       return;
     }
 
-    // Instant effects
-    if (def.duration === 0) {
-      if (def.effect.healthRestore) {
-        healPlayer(def.effect.healthRestore);
-        addNotification(`${def.emoji} ${def.name}: +${def.effect.healthRestore} vida!`, 'success');
-      } else if (def.type === 'scroll') {
-        addPoints(100);
-        addNotification(`${def.emoji} ${def.name}: +100 pontos!`, 'success');
+    // Collect the item and get the result
+    const result = collectMapItem(mapItemId);
+    
+    // Handle instant effects based on result
+    if (result && 'type' in result) {
+      if (result.type === 'heal' && result.amount) {
+        healPlayer(result.amount);
+        addNotification(`${def.emoji} ${def.name}: +${result.amount} vida!`, 'success');
+      } else if (result.type === 'points' && result.amount) {
+        addPoints(result.amount);
+        addNotification(`${def.emoji} ${def.name}: +${result.amount} pontos!`, 'success');
       }
-      collectMapItem(mapItemId);
-      return;
+    } else if (def.duration > 0) {
+      // Item added to inventory
+      addNotification(`${def.emoji} ${def.name} adicionado ao inventário!`, 'success');
     }
-
-    // Add to inventory
-    collectMapItem(mapItemId);
-    addNotification(`${def.emoji} ${def.name} adicionado ao inventário!`, 'success');
   };
 
   return (
