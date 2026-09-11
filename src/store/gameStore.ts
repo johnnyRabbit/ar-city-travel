@@ -8,6 +8,7 @@ import {
   getNodeCoords,
   calculateDistance,
 } from '../data/streetGraph';
+import { useInventoryStore } from './inventoryStore';
 
 const streetGraph = buildStreetGraph();
 
@@ -158,6 +159,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       let updatedZombie = z;
 
+      // Apply zombie slowdown from active effects
+      const { activeEffects } = useInventoryStore.getState();
+      const zombieSlowdown = activeEffects.reduce((slow, e) => {
+        if (e.effect.zombieSlowdown) return slow * (1 - e.effect.zombieSlowdown);
+        return slow;
+      }, 1);
+      const effectiveSpeed = z.speed * zombieSlowdown;
+
       // If zombie is very close to player (less than 30m), move directly to player
       if (distToPlayer < 30) {
         // Move directly towards player (no pathfinding needed)
@@ -166,8 +175,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const dist = Math.sqrt(dLat * dLat + dLng * dLng);
         
         if (dist > 0.00001) {
-          const stepLat = (dLat / dist) * z.speed;
-          const stepLng = (dLng / dist) * z.speed;
+          const stepLat = (dLat / dist) * effectiveSpeed;
+          const stepLng = (dLng / dist) * effectiveSpeed;
           
           updatedZombie = {
             ...z,
@@ -201,9 +210,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ zombies: updatedZombies });
   },
 
-  damagePlayer: (amount) =>
+  damagePlayer: (amount) => {
+    // Apply shield from inventory
+    const actualDamage = useInventoryStore.getState().applyDamage(amount);
+    if (actualDamage === 0) return; // Shield absorbed all damage
+
     set((state) => {
-      const newHealth = Math.max(0, state.player.health - amount);
+      const newHealth = Math.max(0, state.player.health - actualDamage);
       if (newHealth <= 0) {
         return {
           player: { ...state.player, health: 0 },
@@ -220,7 +233,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
       return { player: { ...state.player, health: newHealth } };
-    }),
+    });
+  },
 
   healPlayer: (amount) =>
     set((state) => ({
@@ -335,23 +349,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  killZombie: (id) =>
+  killZombie: (id) => {
+    // Apply damage multiplier from active effects
+    const { activeEffects } = useInventoryStore.getState();
+    const damageMultiplier = activeEffects.reduce((mult, e) => {
+      if (e.effect.damageMultiplier) return mult * e.effect.damageMultiplier;
+      return mult;
+    }, 1);
+
+    const points = Math.round(50 * damageMultiplier);
+
     set((state) => ({
       zombies: state.zombies.filter((z) => z.id !== id),
-      score: state.score + 50,
-      player: { ...state.player, points: state.player.points + 50 },
+      score: state.score + points,
+      player: { ...state.player, points: state.player.points + points },
       notifications: [
         ...state.notifications,
         {
           id: Date.now().toString(),
-          message: '🗡️ Zombie eliminado! (+50 pts)',
+          message: `🗡️ Zombie eliminado! (+${points} pts)`,
           type: 'success' as const,
           timestamp: Date.now(),
         },
       ],
-    })),
+    }));
+  },
 
-  resetGame: () =>
+  resetGame: () => {
+    useInventoryStore.getState().resetInventory();
     set({
       player: initialPlayer,
       zombies: [],
@@ -361,5 +386,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       arMode: false,
       score: 0,
       notifications: [],
-    }),
+    });
+  },
 }));

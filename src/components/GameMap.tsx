@@ -5,6 +5,8 @@ import { useGameStore } from '../store/gameStore';
 import { eras } from '../data/evoraHistory';
 import StreetOverlay from './StreetOverlay';
 import ZombiePaths from './ZombiePaths';
+import PowerUpMarkers from './PowerUpMarkers';
+import OtherPlayers from './OtherPlayers';
 
 const playerIcon = L.divIcon({
   html: '<div style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">🧑‍🚀</div>',
@@ -119,6 +121,8 @@ export default function GameMap() {
         <PlayerMarker />
         <ZombieMarkers />
         <HistoricalMarkers />
+        <PowerUpMarkers />
+        <OtherPlayers />
       </MapContainer>
     </div>
   );

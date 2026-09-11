@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GameMap from './components/GameMap';
 import GameHUD from './components/GameHUD';
 import TimeSelector from './components/TimeSelector';
 import ARView from './components/ARView';
 import PlayerMovement from './components/PlayerMovement';
 import GameLoop from './components/GameLoop';
+import Inventory from './components/Inventory';
+import ActiveEffects from './components/ActiveEffects';
+import ChatSim from './components/ChatSim';
+import Leaderboard from './components/Leaderboard';
 import { useGameStore } from './store/gameStore';
+import { useInventoryStore } from './store/inventoryStore';
 import { eras } from './data/evoraHistory';
 
 function WelcomeScreen({ onStart }: { onStart: () => void }) {
@@ -18,10 +23,12 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           <p className="text-gray-300 text-sm">Explora a história de Évora enquanto foges de zombies temporais!</p>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🗺️</span><p className="text-white text-xs mt-1">Mapa interativo de Évora</p></div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🗺️</span><p className="text-white text-xs mt-1">Mapa de Évora</p></div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🧟</span><p className="text-white text-xs mt-1">Zombies pelas ruas</p></div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🎒</span><p className="text-white text-xs mt-1">Power-ups e itens</p></div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">👥</span><p className="text-white text-xs mt-1">Multiplayer + Chat</p></div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">⏰</span><p className="text-white text-xs mt-1">Viaja no tempo</p></div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">📱</span><p className="text-white text-xs mt-1">Realidade Aumentada</p></div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🏆</span><p className="text-white text-xs mt-1">Leaderboard global</p></div>
         </div>
         <div className="flex justify-center gap-2 mb-8 flex-wrap">
           {eras.map((era) => (
@@ -32,10 +39,11 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           <p className="text-white text-xs font-bold mb-2">🎮 Controlos:</p>
           <ul className="text-gray-300 text-xs space-y-1">
             <li>• <strong>WASD / Setas</strong> — Mover no mapa</li>
-            <li>• <strong>GPS</strong> — Posição real (em mobile)</li>
             <li>• <strong>Clica nos markers</strong> — Descobrir história</li>
             <li>• <strong>Clica nos zombies</strong> — Eliminar</li>
-            <li>• <strong>Zombies seguem as ruas</strong> — Não vão em linha reta!</li>
+            <li>• <strong>Apanha itens</strong> — Escudos, poções, armas!</li>
+            <li>• <strong>🎒 Inventário</strong> — Usa os itens guardados</li>
+            <li>• <strong>💬 Chat</strong> — Fala com outros jogadores</li>
           </ul>
         </div>
         <button onClick={onStart} className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-2xl font-bold text-lg shadow-2xl hover:scale-105 transition-transform animate-pulse">🚀 Começar Aventura</button>
@@ -83,9 +91,50 @@ export default function App() {
       <ARView />
       <TimeSelector />
       <GameHUD />
+      <ActiveEffects />
+      <Inventory />
+      <ChatSim />
+      <Leaderboard />
       <MiniMap />
       <PlayerMovement />
       <GameLoop />
+      <EffectsLoop />
     </div>
   );
+}
+
+function EffectsLoop() {
+  const { gameActive } = useGameStore();
+  const { tickEffects, spawnRandomMapItems, mapItems } = useInventoryStore();
+  const { player } = useGameStore();
+
+  // Tick effects every 100ms
+  useEffect(() => {
+    if (!gameActive) return;
+    const interval = setInterval(() => {
+      tickEffects(100);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [gameActive, tickEffects]);
+
+  // Spawn items periodically
+  useEffect(() => {
+    if (!gameActive) return;
+
+    // Initial spawn
+    if (mapItems.filter((m) => !m.collected).length === 0) {
+      spawnRandomMapItems(5, player.lat, player.lng);
+    }
+
+    const interval = setInterval(() => {
+      const activeItems = mapItems.filter((m) => !m.collected).length;
+      if (activeItems < 5) {
+        spawnRandomMapItems(2, player.lat, player.lng);
+      }
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [gameActive, player.lat, player.lng, mapItems, spawnRandomMapItems]);
+
+  return null;
 }
