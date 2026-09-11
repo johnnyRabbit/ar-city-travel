@@ -6,7 +6,7 @@ import { getItemDef, rarityColors } from '../data/items';
 export default function Inventory() {
   const [isOpen, setIsOpen] = useState(false);
   const { inventory, useItem } = useInventoryStore();
-  const { healPlayer, addNotification } = useGameStore();
+  const { healPlayer, addPoints, addNotification } = useGameStore();
 
   const handleUseItem = (itemId: string) => {
     const invItem = inventory.find((i) => i.id === itemId);
@@ -20,6 +20,9 @@ export default function Inventory() {
       if (def.effect.healthRestore) {
         healPlayer(def.effect.healthRestore);
         addNotification(`💚 +${def.effect.healthRestore} vida!`, 'success');
+      } else if (def.type === 'scroll') {
+        addPoints(100);
+        addNotification(`📜 +100 pontos!`, 'success');
       }
     } else {
       addNotification(`${def.emoji} ${def.name} ativado!`, 'success');

@@ -10,7 +10,7 @@ interface InventoryStore {
   maxShieldHP: number;
 
   // Actions
-  collectMapItem: (mapItemId: string) => { type: string; amount?: number; def?: any } | void;
+  collectMapItem: (mapItemId: string) => { type: string; amount?: number; def?: any } | null;
   useItem: (inventoryItemId: string) => { type: string; amount?: number } | void;
   tickEffects: (deltaMs: number) => void;
   spawnMapItem: (lat: number, lng: number, defId?: string) => void;
@@ -30,28 +30,24 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
   collectMapItem: (mapItemId) => {
     const { mapItems } = get();
     const mapItem = mapItems.find((m) => m.id === mapItemId);
-    if (!mapItem || mapItem.collected) return;
+    if (!mapItem || mapItem.collected) return null;
 
     const def = getItemDef(mapItem.defId);
-    if (!def) return;
+    if (!def) return null;
 
     // Instant effects
     if (def.duration === 0) {
+      // Mark as collected first
+      set((state) => ({
+        mapItems: state.mapItems.map((m) =>
+          m.id === mapItemId ? { ...m, collected: true } : m
+        ),
+      }));
+
       if (def.effect.healthRestore) {
-        // Will be handled by gameStore
-        set((state) => ({
-          mapItems: state.mapItems.map((m) =>
-            m.id === mapItemId ? { ...m, collected: true } : m
-          ),
-        }));
         return { type: 'heal', amount: def.effect.healthRestore, def };
       }
       if (def.type === 'scroll') {
-        set((state) => ({
-          mapItems: state.mapItems.map((m) =>
-            m.id === mapItemId ? { ...m, collected: true } : m
-          ),
-        }));
         return { type: 'points', amount: 100, def };
       }
     }
@@ -69,6 +65,8 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
         m.id === mapItemId ? { ...m, collected: true } : m
       ),
     }));
+
+    return { type: 'inventory', def };
   },
 
   useItem: (inventoryItemId) => {

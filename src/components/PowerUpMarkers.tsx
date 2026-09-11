@@ -55,17 +55,17 @@ export default function PowerUpMarkers() {
     const result = collectMapItem(mapItemId);
     
     // Handle instant effects based on result
-    if (result && 'type' in result) {
+    if (result) {
       if (result.type === 'heal' && result.amount) {
         healPlayer(result.amount);
         addNotification(`${def.emoji} ${def.name}: +${result.amount} vida!`, 'success');
       } else if (result.type === 'points' && result.amount) {
         addPoints(result.amount);
         addNotification(`${def.emoji} ${def.name}: +${result.amount} pontos!`, 'success');
+      } else if (result.type === 'inventory') {
+        // Item added to inventory
+        addNotification(`${def.emoji} ${def.name} adicionado ao inventário!`, 'success');
       }
-    } else if (def.duration > 0) {
-      // Item added to inventory
-      addNotification(`${def.emoji} ${def.name} adicionado ao inventário!`, 'success');
     }
   };
 
