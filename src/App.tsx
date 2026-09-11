@@ -15,8 +15,9 @@ import { eras } from './data/evoraHistory';
 
 function WelcomeScreen({ onStart }: { onStart: () => void }) {
   return (
-    <div className="fixed inset-0 z-[3000] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full text-center">
+    <div className="fixed inset-0 z-[3000] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center p-4 py-8">
+        <div className="max-w-lg w-full text-center">
         <div className="mb-8">
           <div className="text-6xl mb-4 animate-bounce">🏛️</div>
           <h1 className="text-4xl font-bold text-white mb-2">Évora <span className="text-purple-400">Through Time</span></h1>
@@ -48,6 +49,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
         </div>
         <button onClick={onStart} className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-2xl font-bold text-lg shadow-2xl hover:scale-105 transition-transform animate-pulse">🚀 Começar Aventura</button>
         <p className="text-gray-500 text-xs mt-4">Dados históricos reais de Évora, Portugal</p>
+      </div>
       </div>
     </div>
   );
