@@ -2,16 +2,34 @@ import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 
 export default function GameLoop() {
-  const { gameActive, updateZombies, spawnZombies, zombies } = useGameStore();
+  const gameActive = useGameStore((state) => state.gameActive);
 
   useEffect(() => {
     if (!gameActive) return;
-    const moveInterval = setInterval(() => updateZombies(), 100);
+
+    console.log('[GameLoop] ✅ Started!');
+
+    // Move zombies every 100ms
+    const moveInterval = setInterval(() => {
+      const store = useGameStore.getState();
+      store.updateZombies();
+    }, 100);
+
+    // Spawn new zombie every 15 seconds
     const spawnInterval = setInterval(() => {
-      if (zombies.filter((z) => z.active).length < 8) spawnZombies(1);
+      const store = useGameStore.getState();
+      const activeZombies = store.zombies.filter((z) => z.active).length;
+      if (activeZombies < 8) {
+        store.spawnZombies(1);
+      }
     }, 15000);
-    return () => { clearInterval(moveInterval); clearInterval(spawnInterval); };
-  }, [gameActive, updateZombies, spawnZombies, zombies]);
+
+    return () => {
+      console.log('[GameLoop] ❌ Stopped!');
+      clearInterval(moveInterval);
+      clearInterval(spawnInterval);
+    };
+  }, [gameActive]); // Only depend on gameActive
 
   return null;
 }
