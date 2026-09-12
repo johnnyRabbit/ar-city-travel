@@ -45,7 +45,7 @@ interface GameStore extends GameState {
 
 function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: number): Zombie {
   const zombieNodeId = findNearestNode(zombie.lat, zombie.lng);
-  const playerNodeId = findNearestNode(playerLat, player.lng);
+  const playerNodeId = findNearestNode(playerLat, playerLng);
   const path = findPath(streetGraph, zombieNodeId, playerNodeId);
 
   if (path.length < 2) {

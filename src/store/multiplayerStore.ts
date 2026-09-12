@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, Player, ChatMessage, PlayerPosition } from '../lib/supabase';
+import { isSupabaseConfigured, supabase, Player, ChatMessage, PlayerPosition } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface MultiplayerState {
@@ -26,28 +26,26 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
   connected: false,
 
   connect: (playerId) => {
+    // Se o Supabase não está configurado, não fazer nada
+    if (!isSupabaseConfigured || !supabase) {
+      console.log('[Multiplayer] Supabase não configurado — multiplayer desativado');
+      return;
+    }
+
     const { channel: existingChannel } = get();
     if (existingChannel) return;
 
     // Subscribe to realtime channels
     const channel = supabase
       .channel('game-room')
-      // Player positions
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'player_positions',
-        },
-        (payload) => {
+        { event: '*', schema: 'public', table: 'player_positions' },
+        (payload: any) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             const position = payload.new as PlayerPosition;
             set((state) => ({
-              playerPositions: {
-                ...state.playerPositions,
-                [position.player_id]: position
-              }
+              playerPositions: { ...state.playerPositions, [position.player_id]: position }
             }));
           } else if (payload.eventType === 'DELETE') {
             const position = payload.old as PlayerPosition;
@@ -59,15 +57,10 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
           }
         }
       )
-      // Chat messages
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-        },
-        (payload) => {
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        (payload: any) => {
           const message = payload.new as ChatMessage;
           set((state) => ({
             chatMessages: [...state.chatMessages.slice(-49), message]
@@ -93,20 +86,20 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
         updated_at: new Date().toISOString()
       });
 
-    // Load initial data
     get().loadOnlinePlayers();
     get().loadChatHistory();
   },
 
   disconnect: () => {
     const { channel } = get();
-    if (channel) {
+    if (channel && supabase) {
       supabase.removeChannel(channel);
-      set({ channel: null, connected: false, onlinePlayers: [], playerPositions: {} });
     }
+    set({ channel: null, connected: false, onlinePlayers: [], playerPositions: {} });
   },
 
   updatePosition: async (playerId, lat, lng) => {
+    if (!supabase) return;
     try {
       await supabase
         .from('player_positions')
@@ -122,25 +115,20 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
   },
 
   sendChatMessage: async (playerId, username, avatar, message) => {
+    if (!supabase) return;
     try {
       await supabase
         .from('chat_messages')
-        .insert({
-          player_id: playerId,
-          username,
-          avatar,
-          message
-        });
+        .insert({ player_id: playerId, username, avatar, message });
     } catch (error) {
       console.error('Error sending message:', error);
     }
   },
 
   loadOnlinePlayers: async () => {
+    if (!supabase) return;
     try {
-      // Get players active in last 5 minutes
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      
       const { data, error } = await supabase
         .from('players')
         .select('*')
@@ -149,7 +137,6 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
         .limit(50);
 
       if (error) throw error;
-
       set({ onlinePlayers: data || [] });
     } catch (error) {
       console.error('Error loading online players:', error);
@@ -157,6 +144,7 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
   },
 
   loadChatHistory: async () => {
+    if (!supabase) return;
     try {
       const { data, error } = await supabase
         .from('chat_messages')
@@ -165,7 +153,6 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
         .limit(50);
 
       if (error) throw error;
-
       set({ chatMessages: (data || []).reverse() });
     } catch (error) {
       console.error('Error loading chat history:', error);

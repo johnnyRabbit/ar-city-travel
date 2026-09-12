@@ -2,10 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 
 // Configuração do Supabase
 // Substitua estas variáveis pelas suas credenciais do Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://SEU_PROJETO.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'SUA_CHAVE_ANONIMA';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Verificar se o Supabase está configurado
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && 
+  supabaseUrl !== 'https://SEU_PROJETO.supabase.co' && 
+  supabaseAnonKey !== 'SUA_CHAVE_ANONIMA');
+
+// Criar cliente apenas se estiver configurado
+export const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl!, supabaseAnonKey!)
+  : null;
 
 // Tipos de dados
 export interface Player {
