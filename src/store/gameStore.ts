@@ -284,18 +284,55 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       let spawnNodeId: string | null = null;
       let attempts = 0;
-      while (!spawnNodeId && attempts < 30) {
+      
+      // Procurar nós entre 100-300 metros do jogador
+      while (!spawnNodeId && attempts < 50) {
         const randomNodeIdx = Math.floor(Math.random() * 45) + 1;
         const nodeId = `n${String(randomNodeIdx).padStart(2, '0')}`;
         const nodeCoords = getNodeCoords(nodeId);
         if (nodeCoords) {
           const dist = calculateDistance(player.lat, player.lng, nodeCoords.lat, nodeCoords.lng);
-          if (dist > 80) spawnNodeId = nodeId;
+          // Spawn entre 100-300 metros do jogador
+          if (dist >= 100 && dist <= 300) {
+            spawnNodeId = nodeId;
+          }
         }
         attempts++;
       }
 
-      if (!spawnNodeId) spawnNodeId = 'n32';
+      // Se não encontrou, spawnar no nó mais próximo que esteja a 100-300m
+      if (!spawnNodeId) {
+        let bestNode: string | null = null;
+        let bestDist = Infinity;
+        
+        for (let idx = 1; idx <= 45; idx++) {
+          const nodeId = `n${String(idx).padStart(2, '0')}`;
+          const nodeCoords = getNodeCoords(nodeId);
+          if (nodeCoords) {
+            const dist = calculateDistance(player.lat, player.lng, nodeCoords.lat, nodeCoords.lng);
+            if (dist >= 100 && dist <= 300 && dist < bestDist) {
+              bestDist = dist;
+              bestNode = nodeId;
+            }
+          }
+        }
+        
+        // Último recurso: usar qualquer nó que não seja o do jogador
+        if (!bestNode) {
+          const playerNodeId = findNearestNode(player.lat, player.lng);
+          for (let idx = 1; idx <= 45; idx++) {
+            const nodeId = `n${String(idx).padStart(2, '0')}`;
+            if (nodeId !== playerNodeId) {
+              bestNode = nodeId;
+              break;
+            }
+          }
+        }
+        
+        spawnNodeId = bestNode;
+      }
+
+      if (!spawnNodeId) continue;
 
       const spawnCoords = getNodeCoords(spawnNodeId);
       if (!spawnCoords) continue;
