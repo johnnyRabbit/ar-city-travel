@@ -93,36 +93,19 @@ function MiniMap() {
 
 export default function App() {
   const [started, setStarted] = useState(false);
-  const { user, loading } = useAuthStore();
-  const { connect, disconnect } = useMultiplayerStore();
+  const { user, isLocalMode, initialize } = useAuthStore();
 
-  // Connect to multiplayer when user logs in
+  // Initialize auth on mount
   useEffect(() => {
-    if (user) {
-      connect(user.id);
-    } else {
-      disconnect();
-    }
-  }, [user, connect, disconnect]);
+    initialize();
+  }, [initialize]);
 
-  // Show loading while checking auth
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-[3000] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">🏛️</div>
-          <p className="text-white text-lg">A carregar...</p>
-        </div>
-      </div>
-    );
-  }
+  // Se está em modo local ou já autenticado, mostrar o jogo
+  const canPlay = isLocalMode || user;
 
-  // Show auth screen if not logged in
-  if (!user) {
-    return <AuthScreen />;
-  }
-
-  if (!started) return <WelcomeScreen onStart={() => setStarted(true)} />;
+  if (!started && canPlay) return <WelcomeScreen onStart={() => setStarted(true)} />;
+  
+  if (!started && !canPlay) return <AuthScreen />;
 
   return (
     <div className="w-screen h-screen overflow-hidden relative">
