@@ -8,8 +8,6 @@ import {
   getNodeCoords,
   calculateDistance,
 } from '../data/streetGraph';
-import { useInventoryStore } from './inventoryStore';
-import { useQuestStore } from './questStore';
 import { soundSystem } from '../utils/sounds';
 
 const streetGraph = buildStreetGraph();
@@ -33,39 +31,32 @@ interface GameStore extends GameState {
   stopGame: () => void;
   toggleAR: () => void;
   addZombie: (zombie: Zombie) => void;
-  updateZombies: () => void;
-  damagePlayer: (amount: number) => void;
+  updateZombies: (getActiveEffects?: () => any[]) => void;
+  damagePlayer: (amount: number, applyShield?: (amount: number) => number) => void;
   healPlayer: (amount: number) => void;
   discoverEvent: (id: string) => void;
   addPoints: (points: number) => void;
   addNotification: (message: string, type: GameNotification['type']) => void;
   removeNotification: (id: string) => void;
   spawnZombies: (count: number) => void;
-  killZombie: (id: string) => void;
-  resetGame: () => void;
+  killZombie: (id: string, getDamageMultiplier?: () => number, onKill?: () => void) => void;
+  resetGame: (onReset?: () => void) => void;
 }
 
 function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: number): Zombie {
   const zombieNodeId = findNearestNode(zombie.lat, zombie.lng);
-  const playerNodeId = findNearestNode(playerLat, playerLng);
+  const playerNodeId = findNearestNode(playerLat, player.lng);
   const path = findPath(streetGraph, zombieNodeId, playerNodeId);
 
-  const distToPlayer = calculateDistance(zombie.lat, zombie.lng, playerLat, playerLng);
-  console.log(`[Zombie ${zombie.id}] Dist: ${distToPlayer.toFixed(0)}m, Path: ${zombieNodeId} -> ${playerNodeId} = [${path.join(', ')}] (length: ${path.length})`);
-
-  // If path is too short or invalid, return zombie unchanged
   if (path.length < 2) {
-    console.warn(`[Zombie ${zombie.id}] Invalid path: ${path.join(', ')}`);
     return zombie;
   }
 
-  // Find where the zombie currently is in the new path
   let startIndex = path.indexOf(zombieNodeId);
   if (startIndex === -1) startIndex = 0;
 
   return {
     ...zombie,
-    // Keep current position - don't snap to node
     path,
     currentNodeIndex: startIndex,
     targetNodeId: path[startIndex + 1] || path[path.length - 1],
@@ -76,40 +67,31 @@ function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: nu
 function moveZombieAlongPath(zombie: Zombie): Zombie {
   if (!zombie.path || zombie.path.length === 0) return zombie;
 
-  // Get current target node coordinates
   const targetCoords = getNodeCoords(zombie.targetNodeId || zombie.path[zombie.path.length - 1]);
   if (!targetCoords) return zombie;
 
-  // Calculate direction to target
   const dLat = targetCoords.lat - zombie.lat;
   const dLng = targetCoords.lng - zombie.lng;
   const dist = Math.sqrt(dLat * dLat + dLng * dLng);
   const moveSpeed = zombie.speed;
 
-  // Check if zombie reached the current target node
   if (dist < 0.00008) {
-    // Advance to next node in path
     const nextIndex = zombie.currentNodeIndex + 1;
 
     if (nextIndex < zombie.path.length) {
-      // Set new target but DON'T teleport - keep current position
       const newTargetId = zombie.path[nextIndex];
       return {
         ...zombie,
         currentNodeIndex: nextIndex,
         targetNodeId: newTargetId,
-        // Keep current lat/lng - will move smoothly next tick
       };
     }
-    // Reached end of path - stay here
     return zombie;
   }
 
-  // Move smoothly towards target (don't overshoot)
   const stepLat = (dLat / dist) * moveSpeed;
   const stepLng = (dLng / dist) * moveSpeed;
 
-  // Don't move past the target
   const newLat = Math.abs(stepLat) > Math.abs(dLat) ? targetCoords.lat : zombie.lat + stepLat;
   const newLng = Math.abs(stepLng) > Math.abs(dLng) ? targetCoords.lng : zombie.lng + stepLng;
 
@@ -144,34 +126,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addZombie: (zombie) =>
     set((state) => ({ zombies: [...state.zombies, zombie] })),
 
-  updateZombies: () => {
+  updateZombies: (getActiveEffects) => {
     const { player, zombies } = get();
 
     if (zombies.length === 0) return;
+
+    // Get active effects from callback (avoids circular deps)
+    let zombieSlowdown = 1;
+    if (getActiveEffects) {
+      const activeEffects = getActiveEffects();
+      zombieSlowdown = activeEffects.reduce((slow: number, e: any) => {
+        if (e.effect?.zombieSlowdown) return slow * (1 - e.effect.zombieSlowdown);
+        return slow;
+      }, 1);
+    }
 
     const updatedZombies = zombies.map((z) => {
       if (!z.active) return z;
 
       const distToPlayer = calculateDistance(z.lat, z.lng, player.lat, player.lng);
 
-      // Damage player if very close
       if (distToPlayer < 10) {
         get().damagePlayer(1);
       }
 
       let updatedZombie = z;
-
-      // Apply zombie slowdown from active effects
-      const { activeEffects } = useInventoryStore.getState();
-      const zombieSlowdown = activeEffects.reduce((slow, e) => {
-        if (e.effect.zombieSlowdown) return slow * (1 - e.effect.zombieSlowdown);
-        return slow;
-      }, 1);
       const effectiveSpeed = z.speed * zombieSlowdown;
 
-      // If zombie is very close to player (less than 30m), move directly to player
       if (distToPlayer < 30) {
-        // Move directly towards player (no pathfinding needed)
         const dLat = player.lat - z.lat;
         const dLng = player.lng - z.lng;
         const dist = Math.sqrt(dLat * dLat + dLng * dLng);
@@ -190,11 +172,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return updatedZombie;
       }
 
-      // Recalculate path if:
-      // - No path exists
-      // - Path is too short
-      // - Reached end of path
-      // - Close to player (less than 50m) - recalculate every time to follow player
       const needsRecalc = !z.path || z.path.length < 2 || 
                           z.currentNodeIndex >= z.path.length - 1 ||
                           distToPlayer < 50;
@@ -203,7 +180,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         updatedZombie = calculatePathForZombie(z, player.lat, player.lng);
       }
 
-      // Move along path smoothly
       updatedZombie = moveZombieAlongPath(updatedZombie);
 
       return updatedZombie;
@@ -212,18 +188,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ zombies: updatedZombies });
   },
 
-  damagePlayer: (amount) => {
-    // Apply shield from inventory
-    const actualDamage = useInventoryStore.getState().applyDamage(amount);
-    if (actualDamage === 0) return; // Shield absorbed all damage
+  damagePlayer: (amount, applyShield) => {
+    let actualDamage = amount;
+    if (applyShield) {
+      actualDamage = applyShield(amount);
+    }
+    
+    if (actualDamage === 0) return;
 
-    // Play damage sound
     soundSystem.playDamage();
 
     set((state) => {
       const newHealth = Math.max(0, state.player.health - actualDamage);
       if (newHealth <= 0) {
-        // Play game over sound
         soundSystem.playGameOver();
         
         return {
@@ -260,7 +237,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         e.id === id ? { ...e, discovered: true } : e
       );
       
-      // Play sound
       soundSystem.playDiscover();
       
       return {
@@ -306,26 +282,61 @@ export const useGameStore = create<GameStore>((set, get) => ({
     for (let i = 0; i < count; i++) {
       const template = zombieTemplates[Math.floor(Math.random() * zombieTemplates.length)];
 
-      // Pick a spawn node far from the player
       let spawnNodeId: string | null = null;
       let attempts = 0;
-      while (!spawnNodeId && attempts < 30) {
+      
+      // Procurar nós entre 100-300 metros do jogador
+      while (!spawnNodeId && attempts < 50) {
         const randomNodeIdx = Math.floor(Math.random() * 45) + 1;
         const nodeId = `n${String(randomNodeIdx).padStart(2, '0')}`;
         const nodeCoords = getNodeCoords(nodeId);
         if (nodeCoords) {
           const dist = calculateDistance(player.lat, player.lng, nodeCoords.lat, nodeCoords.lng);
-          if (dist > 80) spawnNodeId = nodeId;
+          // Spawn entre 100-300 metros do jogador
+          if (dist >= 100 && dist <= 300) {
+            spawnNodeId = nodeId;
+          }
         }
         attempts++;
       }
 
-      if (!spawnNodeId) spawnNodeId = 'n32'; // Aqueduto
+      // Se não encontrou, spawnar no nó mais próximo que esteja a 100-300m
+      if (!spawnNodeId) {
+        let bestNode: string | null = null;
+        let bestDist = Infinity;
+        
+        for (let idx = 1; idx <= 45; idx++) {
+          const nodeId = `n${String(idx).padStart(2, '0')}`;
+          const nodeCoords = getNodeCoords(nodeId);
+          if (nodeCoords) {
+            const dist = calculateDistance(player.lat, player.lng, nodeCoords.lat, nodeCoords.lng);
+            if (dist >= 100 && dist <= 300 && dist < bestDist) {
+              bestDist = dist;
+              bestNode = nodeId;
+            }
+          }
+        }
+        
+        // Último recurso: usar qualquer nó que não seja o do jogador
+        if (!bestNode) {
+          const playerNodeId = findNearestNode(player.lat, player.lng);
+          for (let idx = 1; idx <= 45; idx++) {
+            const nodeId = `n${String(idx).padStart(2, '0')}`;
+            if (nodeId !== playerNodeId) {
+              bestNode = nodeId;
+              break;
+            }
+          }
+        }
+        
+        spawnNodeId = bestNode;
+      }
+
+      if (!spawnNodeId) continue;
 
       const spawnCoords = getNodeCoords(spawnNodeId);
       if (!spawnCoords) continue;
 
-      // Create zombie EXACTLY at spawn node coordinates
       let zombie: Zombie = {
         id: `zombie-${Date.now()}-${i}`,
         name: template.name,
@@ -343,10 +354,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastRecalcTime: 0,
       };
 
-      // Calculate initial path
       zombie = calculatePathForZombie(zombie, player.lat, player.lng);
 
-      // Ensure zombie starts at the first node of the path
       if (zombie.path.length >= 2) {
         const firstNodeCoords = getNodeCoords(zombie.path[0]);
         if (firstNodeCoords) {
@@ -355,30 +364,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
-      console.log(`[Spawn] Zombie ${zombie.id} at ${spawnNodeId}, path: [${zombie.path.join(', ')}]`);
-
       get().addZombie(zombie);
     }
   },
 
-  killZombie: (id) => {
-    // Apply damage multiplier from active effects
-    const { activeEffects } = useInventoryStore.getState();
-    const damageMultiplier = activeEffects.reduce((mult, e) => {
-      if (e.effect.damageMultiplier) return mult * e.effect.damageMultiplier;
-      return mult;
-    }, 1);
+  killZombie: (id, getDamageMultiplier, onKill) => {
+    let damageMultiplier = 1;
+    if (getDamageMultiplier) {
+      damageMultiplier = getDamageMultiplier();
+    }
 
     const points = Math.round(50 * damageMultiplier);
 
-    // Play sound
     soundSystem.playKillZombie();
 
-    // Update kill quests
-    const questStore = useQuestStore.getState();
-    questStore.updateQuestProgress('kill-zombies-10', 1);
-    questStore.updateQuestProgress('kill-zombies-50', 1);
-    questStore.updateQuestProgress('daily-kill-5', 1);
+    if (onKill) {
+      onKill();
+    }
 
     set((state) => ({
       zombies: state.zombies.filter((z) => z.id !== id),
@@ -396,8 +398,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }));
   },
 
-  resetGame: () => {
-    useInventoryStore.getState().resetInventory();
+  resetGame: (onReset) => {
+    if (onReset) {
+      onReset();
+    }
+    
     set({
       player: initialPlayer,
       zombies: [],

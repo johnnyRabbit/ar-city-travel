@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useInventoryStore } from '../store/inventoryStore';
 import { useQuestStore } from '../store/questStore';
 import { useBossStore } from '../store/bossStore';
 
@@ -13,8 +14,11 @@ export default function GameLoop() {
 
     // Move zombies every 100ms
     const moveInterval = setInterval(() => {
-      const store = useGameStore.getState();
-      store.updateZombies();
+      const gameStore = useGameStore.getState();
+      const inventoryStore = useInventoryStore.getState();
+      
+      // Pass callback to get active effects (avoids circular deps)
+      gameStore.updateZombies(() => inventoryStore.activeEffects);
     }, 100);
 
     // Spawn new zombie every 15 seconds
@@ -43,9 +47,11 @@ export default function GameLoop() {
       const effect = bossStore.updateBosses();
       if (effect) {
         const gameStore = useGameStore.getState();
+        const inventoryStore = useInventoryStore.getState();
+        
         gameStore.addNotification(effect.message, 'danger');
         if (effect.type === 'damage') {
-          gameStore.damagePlayer(effect.value);
+          gameStore.damagePlayer(effect.value, (amount) => inventoryStore.applyDamage(amount));
         }
       }
     }, 500);
