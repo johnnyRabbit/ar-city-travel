@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useQuestStore } from '../store/questStore';
+import { useBossStore } from '../store/bossStore';
 
 export default function GameLoop() {
   const gameActive = useGameStore((state) => state.gameActive);
@@ -8,16 +10,6 @@ export default function GameLoop() {
     if (!gameActive) return;
 
     console.log('[GameLoop] ✅ Started!');
-
-    // Log zombie paths every 2 seconds for debugging
-    const logInterval = setInterval(() => {
-      const store = useGameStore.getState();
-      store.zombies.forEach((z) => {
-        if (z.active && z.path.length > 0) {
-          console.log(`[Debug] Zombie ${z.id}: pos=(${z.lat.toFixed(5)}, ${z.lng.toFixed(5)}), path=[${z.path.join(', ')}], nodeIdx=${z.currentNodeIndex}, target=${z.targetNodeId}`);
-        }
-      });
-    }, 2000);
 
     // Move zombies every 100ms
     const moveInterval = setInterval(() => {
@@ -34,11 +26,44 @@ export default function GameLoop() {
       }
     }, 15000);
 
+    // Check boss spawns every 10 seconds
+    const bossCheckInterval = setInterval(() => {
+      const bossStore = useBossStore.getState();
+      const bossToSpawn = bossStore.checkBossSpawns();
+      if (bossToSpawn) {
+        bossStore.spawnBoss(bossToSpawn);
+        const gameStore = useGameStore.getState();
+        gameStore.addNotification('👹 Um boss histórico apareceu!', 'danger');
+      }
+    }, 10000);
+
+    // Update boss abilities every 500ms
+    const bossUpdateInterval = setInterval(() => {
+      const bossStore = useBossStore.getState();
+      const effect = bossStore.updateBosses();
+      if (effect) {
+        const gameStore = useGameStore.getState();
+        gameStore.addNotification(effect.message, 'danger');
+        if (effect.type === 'damage') {
+          gameStore.damagePlayer(effect.value);
+        }
+      }
+    }, 500);
+
+    // Update survival quest progress every second
+    const questInterval = setInterval(() => {
+      const questStore = useQuestStore.getState();
+      questStore.updateQuestProgress('survive-5min', 1);
+      questStore.updateQuestProgress('survive-10min', 1);
+    }, 1000);
+
     return () => {
       console.log('[GameLoop] ❌ Stopped!');
-      clearInterval(logInterval);
       clearInterval(moveInterval);
       clearInterval(spawnInterval);
+      clearInterval(bossCheckInterval);
+      clearInterval(bossUpdateInterval);
+      clearInterval(questInterval);
     };
   }, [gameActive]);
 

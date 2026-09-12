@@ -9,6 +9,8 @@ import {
   calculateDistance,
 } from '../data/streetGraph';
 import { useInventoryStore } from './inventoryStore';
+import { useQuestStore } from './questStore';
+import { soundSystem } from '../utils/sounds';
 
 const streetGraph = buildStreetGraph();
 
@@ -215,9 +217,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const actualDamage = useInventoryStore.getState().applyDamage(amount);
     if (actualDamage === 0) return; // Shield absorbed all damage
 
+    // Play damage sound
+    soundSystem.playDamage();
+
     set((state) => {
       const newHealth = Math.max(0, state.player.health - actualDamage);
       if (newHealth <= 0) {
+        // Play game over sound
+        soundSystem.playGameOver();
+        
         return {
           player: { ...state.player, health: 0 },
           gameActive: false,
@@ -251,6 +259,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newEvents = state.historicalEvents.map((e) =>
         e.id === id ? { ...e, discovered: true } : e
       );
+      
+      // Play sound
+      soundSystem.playDiscover();
+      
       return {
         historicalEvents: newEvents,
         score: state.score + event.points,
@@ -358,6 +370,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }, 1);
 
     const points = Math.round(50 * damageMultiplier);
+
+    // Play sound
+    soundSystem.playKillZombie();
+
+    // Update kill quests
+    const questStore = useQuestStore.getState();
+    questStore.updateQuestProgress('kill-zombies-10', 1);
+    questStore.updateQuestProgress('kill-zombies-50', 1);
+    questStore.updateQuestProgress('daily-kill-5', 1);
 
     set((state) => ({
       zombies: state.zombies.filter((z) => z.id !== id),
