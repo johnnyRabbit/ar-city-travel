@@ -11,8 +11,12 @@ import ChatSim from './components/ChatSim';
 import Leaderboard from './components/Leaderboard';
 import QuestPanel from './components/QuestPanel';
 import BossHUD from './components/BossHUD';
+import AuthScreen from './components/AuthScreen';
+import PlayerProfile from './components/PlayerProfile';
 import { useGameStore } from './store/gameStore';
 import { useInventoryStore } from './store/inventoryStore';
+import { useAuthStore } from './store/authStore';
+import { useMultiplayerStore } from './store/multiplayerStore';
 import { eras } from './data/evoraHistory';
 
 function WelcomeScreen({ onStart }: { onStart: () => void }) {
@@ -89,6 +93,35 @@ function MiniMap() {
 
 export default function App() {
   const [started, setStarted] = useState(false);
+  const { user, loading } = useAuthStore();
+  const { connect, disconnect } = useMultiplayerStore();
+
+  // Connect to multiplayer when user logs in
+  useEffect(() => {
+    if (user) {
+      connect(user.id);
+    } else {
+      disconnect();
+    }
+  }, [user, connect, disconnect]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[3000] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🏛️</div>
+          <p className="text-white text-lg">A carregar...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth screen if not logged in
+  if (!user) {
+    return <AuthScreen />;
+  }
+
   if (!started) return <WelcomeScreen onStart={() => setStarted(true)} />;
 
   return (
@@ -103,6 +136,7 @@ export default function App() {
       <QuestPanel />
       <ChatSim />
       <Leaderboard />
+      <PlayerProfile />
       <MiniMap />
       <PlayerMovement />
       <GameLoop />
