@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import { useGameStore } from '../store/gameStore';
+import { useInventoryStore } from '../store/inventoryStore';
+import { useQuestStore } from '../store/questStore';
 import { eras } from '../data/evoraHistory';
 import StreetOverlay from './StreetOverlay';
 import ZombiePaths from './ZombiePaths';
@@ -44,6 +46,28 @@ function PlayerMarker() {
 
 function ZombieMarkers() {
   const { zombies, killZombie } = useGameStore();
+
+  const handleKillZombie = (id: string) => {
+    const inventoryStore = useInventoryStore.getState();
+    const questStore = useQuestStore.getState();
+    
+    const getDamageMultiplier = () => {
+      const { activeEffects } = inventoryStore;
+      return activeEffects.reduce((mult: number, e: any) => {
+        if (e.effect?.damageMultiplier) return mult * e.effect.damageMultiplier;
+        return mult;
+      }, 1);
+    };
+
+    const onKill = () => {
+      questStore.updateQuestProgress('kill-zombies-10', 1);
+      questStore.updateQuestProgress('kill-zombies-50', 1);
+      questStore.updateQuestProgress('daily-kill-5', 1);
+    };
+
+    killZombie(id, getDamageMultiplier, onKill);
+  };
+
   return (
     <>
       {zombies.filter((z) => z.active).map((zombie) => (
@@ -51,12 +75,12 @@ function ZombieMarkers() {
           key={zombie.id}
           position={[zombie.lat, zombie.lng]}
           icon={createZombieIcon(zombie.emoji)}
-          eventHandlers={{ click: () => killZombie(zombie.id) }}
+          eventHandlers={{ click: () => handleKillZombie(zombie.id) }}
         >
           <Popup>
             <div className="text-center">
               <strong>{zombie.name}</strong><br/>❤️ {zombie.health}/{zombie.maxHealth}
-              <br/><button onClick={() => killZombie(zombie.id)} className="mt-1 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">⚔️ Atacar</button>
+              <br/><button onClick={() => handleKillZombie(zombie.id)} className="mt-1 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">⚔️ Atacar</button>
             </div>
           </Popup>
         </Marker>

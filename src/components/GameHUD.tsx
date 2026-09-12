@@ -49,7 +49,7 @@ export default function GameHUD() {
             <button onClick={stopGame} className="px-4 py-3 bg-white/95 text-red-600 rounded-xl shadow-lg font-bold text-sm hover:bg-red-50 transition-all">⏹️ Parar</button>
           </>
         )}
-        <button onClick={resetGame} className="px-4 py-3 bg-white/95 text-gray-600 rounded-xl shadow-lg font-bold text-sm hover:bg-gray-100 transition-all">🔄 Reset</button>
+        <button onClick={() => resetGame()} className="px-4 py-3 bg-white/95 text-gray-600 rounded-xl shadow-lg font-bold text-sm hover:bg-gray-100 transition-all">🔄 Reset</button>
       </div>
 
       <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-w-[250px]">
@@ -65,7 +65,7 @@ export default function GameHUD() {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Game Over!</h2>
             <p className="text-gray-600 mb-4">Os zombies apanharam-te! Mas descobriste {discoveredCount} locais históricos.</p>
             <div className="bg-purple-50 rounded-lg p-3 mb-4"><p className="text-sm text-purple-800">Pontuação final: <span className="font-bold text-lg">{score}</span></p></div>
-            <button onClick={resetGame} className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:scale-105 transition-transform">🔄 Tentar Novamente</button>
+            <button onClick={() => resetGame()} className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:scale-105 transition-transform">🔄 Tentar Novamente</button>
           </div>
         </div>
       )}

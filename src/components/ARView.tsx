@@ -1,11 +1,34 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useInventoryStore } from '../store/inventoryStore';
+import { useQuestStore } from '../store/questStore';
 
 export default function ARView() {
   const { arMode, zombies, player, killZombie } = useGameStore();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [streamActive, setStreamActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleKillZombie = (id: string) => {
+    const inventoryStore = useInventoryStore.getState();
+    const questStore = useQuestStore.getState();
+    
+    const getDamageMultiplier = () => {
+      const { activeEffects } = inventoryStore;
+      return activeEffects.reduce((mult: number, e: any) => {
+        if (e.effect?.damageMultiplier) return mult * e.effect.damageMultiplier;
+        return mult;
+      }, 1);
+    };
+
+    const onKill = () => {
+      questStore.updateQuestProgress('kill-zombies-10', 1);
+      questStore.updateQuestProgress('kill-zombies-50', 1);
+      questStore.updateQuestProgress('daily-kill-5', 1);
+    };
+
+    killZombie(id, getDamageMultiplier, onKill);
+  };
 
   useEffect(() => {
     if (!arMode) {
@@ -55,7 +78,7 @@ export default function ARView() {
         {zombies.filter((z) => z.active).map((zombie) => {
           const pos = getZombieScreenPosition(zombie.lat, zombie.lng);
           return (
-            <div key={zombie.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer" style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: `translate(-50%, -50%) scale(${pos.scale})` }} onClick={() => killZombie(zombie.id)}>
+            <div key={zombie.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer" style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: `translate(-50%, -50%) scale(${pos.scale})` }} onClick={() => handleKillZombie(zombie.id)}>
               <div className="relative">
                 <span className="text-5xl animate-bounce drop-shadow-lg">{zombie.emoji}</span>
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 bg-gray-800/70 rounded-full h-1.5"><div className="h-1.5 rounded-full bg-red-500" style={{ width: `${(zombie.health / zombie.maxHealth) * 100}%` }} /></div>
