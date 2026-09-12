@@ -9,8 +9,14 @@ import Inventory from './components/Inventory';
 import ActiveEffects from './components/ActiveEffects';
 import ChatSim from './components/ChatSim';
 import Leaderboard from './components/Leaderboard';
+import QuestPanel from './components/QuestPanel';
+import BossHUD from './components/BossHUD';
+import AuthScreen from './components/AuthScreen';
+import PlayerProfile from './components/PlayerProfile';
 import { useGameStore } from './store/gameStore';
 import { useInventoryStore } from './store/inventoryStore';
+import { useAuthStore } from './store/authStore';
+import { useMultiplayerStore } from './store/multiplayerStore';
 import { eras } from './data/evoraHistory';
 
 function WelcomeScreen({ onStart }: { onStart: () => void }) {
@@ -28,7 +34,9 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🧟</span><p className="text-white text-xs mt-1">Zombies pelas ruas</p></div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🎒</span><p className="text-white text-xs mt-1">Power-ups e itens</p></div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">👥</span><p className="text-white text-xs mt-1">Multiplayer + Chat</p></div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">⏰</span><p className="text-white text-xs mt-1">Viaja no tempo</p></div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">📜</span><p className="text-white text-xs mt-1">Missões e quests</p></div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">👹</span><p className="text-white text-xs mt-1">Bosses históricos</p></div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🔊</span><p className="text-white text-xs mt-1">Sons e efeitos</p></div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3"><span className="text-2xl">🏆</span><p className="text-white text-xs mt-1">Leaderboard global</p></div>
         </div>
         <div className="flex justify-center gap-2 mb-8 flex-wrap">
@@ -85,6 +93,35 @@ function MiniMap() {
 
 export default function App() {
   const [started, setStarted] = useState(false);
+  const { user, loading } = useAuthStore();
+  const { connect, disconnect } = useMultiplayerStore();
+
+  // Connect to multiplayer when user logs in
+  useEffect(() => {
+    if (user) {
+      connect(user.id);
+    } else {
+      disconnect();
+    }
+  }, [user, connect, disconnect]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[3000] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🏛️</div>
+          <p className="text-white text-lg">A carregar...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth screen if not logged in
+  if (!user) {
+    return <AuthScreen />;
+  }
+
   if (!started) return <WelcomeScreen onStart={() => setStarted(true)} />;
 
   return (
@@ -92,11 +129,14 @@ export default function App() {
       <GameMap />
       <ARView />
       <TimeSelector />
+      <BossHUD />
       <GameHUD />
       <ActiveEffects />
       <Inventory />
+      <QuestPanel />
       <ChatSim />
       <Leaderboard />
+      <PlayerProfile />
       <MiniMap />
       <PlayerMovement />
       <GameLoop />
