@@ -15,7 +15,7 @@ export default function ActiveEffects() {
       {/* Compact Effects Indicator */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute top-24 right-2 z-[999] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-1"
+        className="absolute bottom-44 right-28 z-[999] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-1"
       >
         <span className="text-sm">✨</span>
         <span className="text-xs font-bold text-purple-600">{totalEffects}</span>

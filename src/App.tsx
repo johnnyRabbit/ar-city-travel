@@ -74,7 +74,7 @@ function MiniMap() {
   const playerPos = toMiniCoord(player.lat, player.lng);
 
   return (
-    <div className="absolute bottom-20 right-2 z-[998] w-24 h-24 bg-slate-800/90 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden">
+    <div className="absolute bottom-44 right-2 z-[998] w-24 h-24 bg-slate-800/90 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden">
       <div className="absolute inset-0 opacity-20"><div className="w-full h-full" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '10px 10px' }} /></div>
       {filteredEvents.map((event) => {
         const pos = toMiniCoord(event.lat, event.lng);

@@ -35,7 +35,7 @@ export default function Inventory() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="absolute bottom-20 left-2 z-[999] w-12 h-12 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
+        className="absolute bottom-32 left-2 z-[999] w-12 h-12 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
       >
         <div className="relative">
           <span className="text-xl">🎒</span>
