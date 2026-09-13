@@ -73,11 +73,11 @@ export default function GameHUD() {
       )}
 
       {/* Main Action Buttons - Large and Accessible */}
-      <div className="absolute bottom-4 left-2 right-2 z-[1000] flex gap-2 justify-center">
+      <div className="absolute bottom-28 left-2 right-2 z-[1000] flex gap-2 justify-center">
         {!gameActive ? (
           <button 
             onClick={startGame} 
-            className="flex-1 max-w-[200px] py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl shadow-2xl font-bold text-base hover:scale-105 transition-transform active:scale-95"
+            className="flex-1 max-w-[220px] py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl shadow-2xl font-bold text-base hover:scale-105 transition-transform active:scale-95"
           >
             🎮 Iniciar Jogo
           </button>
@@ -106,7 +106,7 @@ export default function GameHUD() {
       {/* Reset Button - Smaller, Bottom Right */}
       <button 
         onClick={() => resetGame()} 
-        className="absolute bottom-20 right-2 z-[1000] w-12 h-12 bg-white/95 text-gray-600 rounded-full shadow-lg font-bold text-lg hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center"
+        className="absolute bottom-44 right-2 z-[1000] w-12 h-12 bg-white/95 text-gray-600 rounded-full shadow-lg font-bold text-lg hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center"
       >
         🔄
       </button>

@@ -2,17 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useInventoryStore } from '../store/inventoryStore';
 import { useQuestStore } from '../store/questStore';
+import { eras } from '../data/evoraHistory';
 
 // Avatares diferentes para zombies em AR
 const zombieAvatars = ['🧟', '🧟‍♂️', '🧟‍♀️', '💀', '☠️', '👻', '🎃', '👹', '👺', '🤖'];
 
 export default function ARView() {
-  const { arMode, zombies, player, killZombie, toggleAR } = useGameStore();
+  const { arMode, zombies, player, killZombie, toggleAR, historicalEvents } = useGameStore();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [streamActive, setStreamActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deviceOrientation, setDeviceOrientation] = useState({ alpha: 0, beta: 0, gamma: 0 });
   const [zombieAvatarsMap, setZombieAvatarsMap] = useState<Record<string, string>>({});
+  const [heading, setHeading] = useState(0); // Direção que o utilizador está a olhar (0-360)
 
   // Atribuir avatares únicos a cada zombie
   useEffect(() => {
@@ -32,26 +34,36 @@ export default function ARView() {
     if (!arMode) return;
 
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      setDeviceOrientation({
-        alpha: event.alpha || 0, // compass direction (0-360)
-        beta: event.beta || 0,   // front-back tilt (-180 to 180)
-        gamma: event.gamma || 0, // left-right tilt (-90 to 90)
-      });
+      const alpha = event.alpha || 0; // compass direction (0-360)
+      const beta = event.beta || 0;   // front-back tilt
+      const gamma = event.gamma || 0; // left-right tilt
+      
+      setDeviceOrientation({ alpha, beta, gamma });
+      
+      // Calcular heading (direção que o utilizador está a olhar)
+      // Em iOS, alpha é relativo ao início, precisamos de webkitCompassHeading
+      const webkitEvent = event as any;
+      if (webkitEvent.webkitCompassHeading) {
+        setHeading(webkitEvent.webkitCompassHeading);
+      } else {
+        // Android e outros: alpha é o heading
+        setHeading(360 - alpha);
+      }
     };
 
     // Request permission on iOS
     if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
       (DeviceOrientationEvent as any).requestPermission().then((permission: string) => {
         if (permission === 'granted') {
-          window.addEventListener('deviceorientation', handleOrientation);
+          window.addEventListener('deviceorientation', handleOrientation, true);
         }
-      });
+      }).catch(console.error);
     } else {
-      window.addEventListener('deviceorientation', handleOrientation);
+      window.addEventListener('deviceorientation', handleOrientation, true);
     }
 
     return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
+      window.removeEventListener('deviceorientation', handleOrientation, true);
     };
   }, [arMode]);
 
@@ -96,36 +108,60 @@ export default function ARView() {
 
   if (!arMode) return null;
 
-  // Calcular posição do zombie baseado na posição relativa ao jogador E orientação do dispositivo
-  const getZombieScreenPosition = (zombieLat: number, zombieLng: number) => {
-    const dLat = zombieLat - player.lat;
-    const dLng = zombieLng - player.lng;
-    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+  // Calcular bearing (ângulo) entre duas coordenadas GPS
+  const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+    const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+              Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+    let bearing = Math.atan2(y, x) * 180 / Math.PI;
+    bearing = (bearing + 360) % 360;
+    return bearing;
+  };
+
+  // Calcular distância entre duas coordenadas GPS (em metros)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371000; // Raio da Terra em metros
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Calcular posição do zombie/ponto de interesse no ecrã
+  const getScreenPosition = (targetLat: number, targetLng: number) => {
+    const distance = calculateDistance(player.lat, player.lng, targetLat, targetLng);
+    const bearing = calculateBearing(player.lat, player.lng, targetLat, targetLng);
     
-    // Calcular ângulo do zombie relativamente ao jogador
-    const angleToZombie = Math.atan2(dLng, dLat) * (180 / Math.PI);
+    // Ângulo relativo ao heading do utilizador
+    let relativeAngle = bearing - heading;
     
-    // Ajustar com a orientação do dispositivo (se disponível)
-    const compassAngle = deviceOrientation.alpha || 0;
-    const relativeAngle = angleToZombie - compassAngle;
+    // Normalizar para -180 a 180
+    if (relativeAngle > 180) relativeAngle -= 360;
+    if (relativeAngle < -180) relativeAngle += 360;
     
-    // Mapear para coordenadas do ecrã
-    // Ângulo relativo de -90 a 90 graus é visível
-    const normalizedAngle = ((relativeAngle + 180) % 360) - 180;
+    // Campo de visão horizontal (aproximadamente 60 graus para câmara normal)
+    const fovHorizontal = 60;
     
-    // Mapear ângulo para posição X do ecrã (-60 a 60 graus visíveis)
-    const screenX = 50 + (normalizedAngle / 60) * 40;
+    // Mapear ângulo relativo para posição X do ecrã
+    const screenX = 50 + (relativeAngle / fovHorizontal) * 50;
     
-    // Posição Y baseada na distância (mais longe = mais alto)
-    const screenY = 60 - (dist * 2000);
+    // Posição Y baseada na distância e inclinação do dispositivo
+    // Mais longe = mais alto no ecrã
+    const baseY = 60; // Linha do horizonte
+    const distanceFactor = Math.min(distance / 500, 1); // Normalizar até 500m
+    const screenY = baseY - (distanceFactor * 20) + (deviceOrientation.beta - 45) * 0.3;
     
     // Escala baseada na distância
-    const scale = Math.max(0.3, Math.min(2, 2 - dist * 1500));
+    const scale = Math.max(0.3, Math.min(2.5, 100 / Math.max(distance, 10)));
     
-    // Verificar se está visível no ecrã
-    const isVisible = screenX >= -10 && screenX <= 110 && screenY >= 0 && screenY <= 100;
+    // Verificar se está visível no ecrã (campo de visão)
+    const isVisible = Math.abs(relativeAngle) < fovHorizontal / 2 && screenY > 0 && screenY < 100;
     
-    return { x: screenX, y: screenY, scale, isVisible, distance: dist };
+    return { x: screenX, y: screenY, scale, isVisible, distance, bearing, relativeAngle };
   };
 
   const handleKillZombie = (id: string) => {
@@ -149,11 +185,16 @@ export default function ARView() {
     killZombie(id, getDamageMultiplier, onKill);
   };
 
+  const handleDiscoverEvent = (id: string) => {
+    const { discoverEvent } = useGameStore.getState();
+    discoverEvent(id);
+  };
+
   const activeZombies = zombies.filter((z) => z.active);
-  const visibleZombies = activeZombies.map(z => ({
-    zombie: z,
-    pos: getZombieScreenPosition(z.lat, z.lng)
-  })).filter(z => z.pos.isVisible);
+  const nearbyEvents = historicalEvents.filter(e => {
+    const dist = calculateDistance(player.lat, player.lng, e.lat, e.lng);
+    return dist < 200; // Mostrar eventos num raio de 200m
+  });
 
   return (
     <div className="absolute inset-0 z-[1500] bg-black">
@@ -183,42 +224,121 @@ export default function ARView() {
         <div className="absolute top-4 left-4 pointer-events-none">
           <div className="bg-black/70 backdrop-blur-sm rounded-xl px-4 py-3 text-white border border-white/20">
             <p className="text-xs font-bold mb-1">📱 Modo AR Ativo</p>
-            <p className="text-[10px] text-gray-300">Aponta a câmara para os zombies</p>
-            <p className="text-[10px] text-gray-300 mt-1">🧟 {visibleZombies.length} visíveis</p>
-            {deviceOrientation.alpha > 0 && (
-              <p className="text-[10px] text-green-400 mt-1">🧭 Orientação ativa</p>
-            )}
+            <p className="text-[10px] text-gray-300">Aponta a câmara para explorar</p>
+            <div className="mt-2 space-y-0.5">
+              <p className="text-[10px] text-green-400">🧟 {activeZombies.length} zombies</p>
+              <p className="text-[10px] text-blue-400">📜 {nearbyEvents.length} locais próximos</p>
+              <p className="text-[10px] text-yellow-400">🧭 {Math.round(heading)}°</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Compass - BOTTOM CENTER */}
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 pointer-events-none">
+          <div className="bg-black/70 backdrop-blur-sm rounded-full px-6 py-3 text-white border border-white/20">
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <p className="text-[10px] text-gray-400">Direção</p>
+                <p className="text-sm font-bold font-mono">{Math.round(heading)}°</p>
+              </div>
+              <div className="w-px h-8 bg-white/30" />
+              <div className="text-center">
+                <p className="text-[10px] text-gray-400">Zombies</p>
+                <p className="text-sm font-bold text-red-400">{activeZombies.length}</p>
+              </div>
+              <div className="w-px h-8 bg-white/30" />
+              <div className="text-center">
+                <p className="text-[10px] text-gray-400">Locais</p>
+                <p className="text-sm font-bold text-blue-400">{nearbyEvents.length}</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Crosshair */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="relative">
-            <div className="w-16 h-16 border-2 border-white/40 rounded-full flex items-center justify-center">
-              <div className="w-2 h-2 bg-white/60 rounded-full" />
+            <div className="w-16 h-16 border-2 border-white/30 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-white/50 rounded-full" />
             </div>
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-white/40" />
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-white/40" />
-            <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-3 h-0.5 bg-white/40" />
-            <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-3 h-0.5 bg-white/40" />
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-white/30" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-white/30" />
+            <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-3 h-0.5 bg-white/30" />
+            <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-3 h-0.5 bg-white/30" />
           </div>
         </div>
 
-        {/* Compass indicator */}
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 pointer-events-none">
-          <div className="bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 text-white text-xs flex items-center gap-3">
-            <span>🧭</span>
-            <span className="font-mono">{Math.round(deviceOrientation.alpha)}°</span>
-            <div className="w-px h-4 bg-white/30" />
-            <span>🧟 {activeZombies.length}</span>
-          </div>
-        </div>
+        {/* Historical Events (Points of Interest) */}
+        {nearbyEvents.map((event) => {
+          const pos = getScreenPosition(event.lat, event.lng);
+          if (!pos.isVisible) return null;
+
+          const eraInfo = eras.find(e => e.id === event.era);
+          const distanceMeters = Math.round(pos.distance);
+
+          return (
+            <div
+              key={event.id}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer transition-all duration-300"
+              style={{
+                left: `${pos.x}%`,
+                top: `${pos.y}%`,
+                transform: `translate(-50%, -50%) scale(${pos.scale})`,
+              }}
+              onClick={() => {
+                if (pos.distance < 20) {
+                  handleDiscoverEvent(event.id);
+                }
+              }}
+            >
+              <div className="relative group">
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-xl animate-pulse" />
+                
+                {/* Event marker */}
+                <div className="relative">
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-3xl border-4 shadow-2xl"
+                    style={{ 
+                      backgroundColor: event.discovered ? '#10B981' : eraInfo?.color || '#666',
+                      borderColor: event.discovered ? '#059669' : '#fff'
+                    }}
+                  >
+                    {event.icon}
+                  </div>
+                  
+                  {/* Shadow */}
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-2 bg-black/40 rounded-full blur-sm" />
+                </div>
+
+                {/* Info tag */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-sm px-3 py-2 rounded-lg whitespace-nowrap border border-blue-500/50 min-w-[120px]">
+                  <p className="text-white text-xs font-bold text-center">{event.title}</p>
+                  <p className="text-blue-300 text-[10px] text-center">{distanceMeters}m</p>
+                  {event.discovered && (
+                    <p className="text-green-400 text-[10px] text-center">✅ Descoberto</p>
+                  )}
+                </div>
+
+                {/* Discover indicator */}
+                {pos.distance < 20 && !event.discovered && (
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-green-600/90 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+                    🔍 Clica para descobrir!
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
 
         {/* Zombies in AR */}
-        {visibleZombies.map(({ zombie, pos }) => {
+        {activeZombies.map((zombie) => {
+          const pos = getScreenPosition(zombie.lat, zombie.lng);
+          if (!pos.isVisible) return null;
+
           const avatar = zombieAvatarsMap[zombie.id] || zombie.emoji;
           const healthPercent = (zombie.health / zombie.maxHealth) * 100;
-          const distanceMeters = Math.round(pos.distance * 111000);
+          const distanceMeters = Math.round(pos.distance);
           
           return (
             <div
@@ -233,43 +353,46 @@ export default function ARView() {
             >
               <div className="relative group">
                 {/* Glow effect */}
-                <div className="absolute inset-0 bg-red-500/30 rounded-full blur-xl animate-pulse" />
+                <div className="absolute inset-0 bg-red-500/40 rounded-full blur-xl animate-pulse" />
                 
                 {/* Zombie avatar */}
                 <div className="relative">
-                  <span className="text-6xl drop-shadow-2xl animate-bounce" style={{ animationDuration: '2s' }}>
+                  <span className="text-7xl drop-shadow-2xl" style={{ 
+                    animation: 'bounce 2s infinite',
+                    filter: 'drop-shadow(0 0 10px rgba(255,0,0,0.5))'
+                  }}>
                     {avatar}
                   </span>
                   
                   {/* Shadow */}
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-2 bg-black/40 rounded-full blur-sm" />
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-16 h-3 bg-black/50 rounded-full blur-md" />
                 </div>
 
                 {/* Name tag */}
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded-lg whitespace-nowrap border border-red-500/50">
-                  <p className="text-white text-[10px] font-bold">{zombie.name}</p>
-                  <p className="text-red-300 text-[8px]">{distanceMeters}m</p>
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-red-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg whitespace-nowrap border-2 border-red-500">
+                  <p className="text-white text-xs font-bold">{zombie.name}</p>
+                  <p className="text-red-300 text-[10px] text-center">{distanceMeters}m</p>
                 </div>
 
                 {/* Health bar */}
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-16">
-                  <div className="bg-gray-900/80 rounded-full h-2 border border-gray-700">
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-20">
+                  <div className="bg-gray-900/90 rounded-full h-2.5 border border-gray-700">
                     <div
-                      className="h-2 rounded-full transition-all"
+                      className="h-2.5 rounded-full transition-all"
                       style={{ 
                         width: `${healthPercent}%`,
                         backgroundColor: healthPercent > 50 ? '#10B981' : healthPercent > 25 ? '#F59E0B' : '#EF4444'
                       }}
                     />
                   </div>
-                  <p className="text-white text-[8px] text-center mt-0.5 font-mono">
+                  <p className="text-white text-[9px] text-center mt-0.5 font-mono font-bold">
                     {zombie.health}/{zombie.maxHealth}
                   </p>
                 </div>
 
                 {/* Attack indicator on hover */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-red-600/90 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+                  <div className="bg-red-600/95 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse shadow-2xl">
                     ⚔️ ATACAR
                   </div>
                 </div>
@@ -278,29 +401,40 @@ export default function ARView() {
           );
         })}
 
-        {/* Direction indicators for off-screen zombies */}
-        {activeZombies.map((zombie) => {
-          const pos = getZombieScreenPosition(zombie.lat, zombie.lng);
-          if (pos.isVisible) return null;
-          
-          // Calcular direção para zombie fora do ecrã
-          const angle = Math.atan2(pos.x - 50, 50 - pos.y) * (180 / Math.PI);
-          
-          return (
-            <div
-              key={`indicator-${zombie.id}`}
-              className="absolute top-1/2 left-1/2 pointer-events-none"
-              style={{
-                transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-120px)`,
-              }}
-            >
-              <div className="bg-red-600/80 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                <span>{zombieAvatarsMap[zombie.id] || zombie.emoji}</span>
-                <span className="text-[10px]">→</span>
+        {/* Direction indicators for off-screen objects */}
+        {[...activeZombies.map(z => ({ ...z, type: 'zombie' as const })), 
+          ...nearbyEvents.map(e => ({ ...e, type: 'event' as const }))]
+          .map((obj) => {
+            const pos = getScreenPosition(obj.lat, obj.lng);
+            if (pos.isVisible) return null;
+            
+            // Calcular posição do indicador na borda do ecrã
+            const angle = Math.atan2(pos.x - 50, 50 - pos.y);
+            const radius = 40; // Distância do centro
+            const indicatorX = 50 + Math.sin(angle) * radius;
+            const indicatorY = 50 - Math.cos(angle) * radius;
+            
+            const isZombie = obj.type === 'zombie';
+            const icon = isZombie ? (zombieAvatarsMap[obj.id] || obj.emoji) : obj.icon;
+            const color = isZombie ? 'red' : 'blue';
+            
+            return (
+              <div
+                key={`indicator-${obj.id}`}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${indicatorX}%`,
+                  top: `${indicatorY}%`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                <div className={`bg-${color}-600/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 border-2 border-${color}-400`}>
+                  <span className="text-sm">{icon}</span>
+                  <span className="text-[10px] font-bold">{Math.round(pos.distance)}m</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
         {/* Error message */}
         {error && (
