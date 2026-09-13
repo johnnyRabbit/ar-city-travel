@@ -74,19 +74,18 @@ function MiniMap() {
   const playerPos = toMiniCoord(player.lat, player.lng);
 
   return (
-    <div className="absolute bottom-20 right-4 z-[1000] w-32 h-32 bg-slate-800/90 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden">
+    <div className="absolute bottom-20 right-2 z-[998] w-24 h-24 bg-slate-800/90 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden">
       <div className="absolute inset-0 opacity-20"><div className="w-full h-full" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '10px 10px' }} /></div>
       {filteredEvents.map((event) => {
         const pos = toMiniCoord(event.lat, event.lng);
         const eraInfo = eras.find((e) => e.id === event.era);
-        return <div key={event.id} className="absolute w-2 h-2 rounded-full" style={{ left: `${pos.x}%`, top: `${pos.y}%`, backgroundColor: event.discovered ? '#10B981' : eraInfo?.color || '#666', transform: 'translate(-50%, -50%)' }} />;
+        return <div key={event.id} className="absolute w-1.5 h-1.5 rounded-full" style={{ left: `${pos.x}%`, top: `${pos.y}%`, backgroundColor: event.discovered ? '#10B981' : eraInfo?.color || '#666', transform: 'translate(-50%, -50%)' }} />;
       })}
       {zombies.filter((z) => z.active).map((zombie) => {
         const pos = toMiniCoord(zombie.lat, zombie.lng);
-        return <div key={zombie.id} className="absolute w-2 h-2 bg-red-500 rounded-full animate-ping" style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }} />;
+        return <div key={zombie.id} className="absolute w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }} />;
       })}
-      <div className="absolute w-3 h-3 bg-blue-400 rounded-full border border-white shadow-lg" style={{ left: `${playerPos.x}%`, top: `${playerPos.y}%`, transform: 'translate(-50%, -50%)' }} />
-      <div className="absolute bottom-1 left-1 text-[8px] text-white/60">MINI MAPA</div>
+      <div className="absolute w-2 h-2 bg-blue-400 rounded-full border border-white shadow-lg" style={{ left: `${playerPos.x}%`, top: `${playerPos.y}%`, transform: 'translate(-50%, -50%)' }} />
     </div>
   );
 }

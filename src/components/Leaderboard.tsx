@@ -52,15 +52,9 @@ export default function Leaderboard() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-3 hover:scale-105 transition-transform"
+        className="absolute bottom-4 left-2 z-[999] w-12 h-12 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🏆</span>
-          <div>
-            <p className="text-xs font-bold text-gray-800">Ranking</p>
-            <p className="text-xs text-gray-500">#{playerEntry?.rank || '-'}</p>
-          </div>
-        </div>
+        <span className="text-xl">🏆</span>
       </button>
     );
   }
