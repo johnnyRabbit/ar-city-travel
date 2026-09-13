@@ -92,15 +92,9 @@ export default function ChatSim() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="absolute top-40 right-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-3 hover:scale-105 transition-transform"
+        className="absolute top-20 right-2 z-[999] w-12 h-12 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">💬</span>
-          <div>
-            <p className="text-xs font-bold text-gray-800">Chat</p>
-            <p className="text-xs text-gray-500">{players.length} online</p>
-          </div>
-        </div>
+        <span className="text-xl">💬</span>
       </button>
     );
   }

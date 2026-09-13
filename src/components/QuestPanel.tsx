@@ -9,6 +9,7 @@ export default function QuestPanel() {
 
   const allQuests = [...dailyQuests, ...quests];
   const activeQuests = allQuests.filter(q => q.status === 'active' || q.status === 'completed');
+  const completedCount = activeQuests.filter(q => q.status === 'completed').length;
 
   const handleClaim = (questId: string) => {
     const reward = claimQuestReward(questId);
@@ -29,20 +30,18 @@ export default function QuestPanel() {
   };
 
   if (!isOpen) {
-    const completedCount = activeQuests.filter(q => q.status === 'completed').length;
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="absolute top-40 left-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-3 hover:scale-105 transition-transform"
+        className="absolute top-32 left-2 z-[999] w-12 h-12 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">📜</span>
-          <div>
-            <p className="text-xs font-bold text-gray-800">Missões</p>
-            {completedCount > 0 && (
-              <p className="text-xs text-green-600 font-bold">{completedCount} prontas!</p>
-            )}
-          </div>
+        <div className="relative">
+          <span className="text-xl">📜</span>
+          {completedCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-green-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+              {completedCount}
+            </span>
+          )}
         </div>
       </button>
     );
