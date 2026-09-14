@@ -13,6 +13,9 @@ import QuestPanel from './components/QuestPanel';
 import BossHUD from './components/BossHUD';
 import AuthScreen from './components/AuthScreen';
 import PlayerProfile from './components/PlayerProfile';
+import Tutorial from './components/Tutorial';
+import ContextualTips from './components/ContextualTips';
+import HelpButton from './components/HelpButton';
 import { useGameStore } from './store/gameStore';
 import { useInventoryStore } from './store/inventoryStore';
 import { useAuthStore } from './store/authStore';
@@ -123,6 +126,9 @@ export default function App() {
       <PlayerMovement />
       <GameLoop />
       <EffectsLoop />
+      <Tutorial />
+      <ContextualTips />
+      <HelpButton />
     </div>
   );
 }
