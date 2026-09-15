@@ -1,26 +1,39 @@
-import { useState, useEffect } from 'react';
-import GameMap from './components/GameMap';
-import GameHUD from './components/GameHUD';
-import TimeSelector from './components/TimeSelector';
-import ARView from './components/ARView';
-import PlayerMovement from './components/PlayerMovement';
-import GameLoop from './components/GameLoop';
-import Inventory from './components/Inventory';
-import ActiveEffects from './components/ActiveEffects';
-import ChatSim from './components/ChatSim';
-import Leaderboard from './components/Leaderboard';
-import QuestPanel from './components/QuestPanel';
-import BossHUD from './components/BossHUD';
-import AuthScreen from './components/AuthScreen';
-import PlayerProfile from './components/PlayerProfile';
-import Tutorial from './components/Tutorial';
-import ContextualTips from './components/ContextualTips';
-import HelpButton from './components/HelpButton';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useGameStore } from './store/gameStore';
 import { useInventoryStore } from './store/inventoryStore';
 import { useAuthStore } from './store/authStore';
 import { useMultiplayerStore } from './store/multiplayerStore';
 import { eras } from './data/evoraHistory';
+
+// Lazy load heavy components for better performance
+const GameMap = lazy(() => import('./components/GameMap'));
+const ARView = lazy(() => import('./components/ARView'));
+const GameHUD = lazy(() => import('./components/GameHUD'));
+const TimeSelector = lazy(() => import('./components/TimeSelector'));
+const Inventory = lazy(() => import('./components/Inventory'));
+const QuestPanel = lazy(() => import('./components/QuestPanel'));
+const ChatSim = lazy(() => import('./components/ChatSim'));
+const Leaderboard = lazy(() => import('./components/Leaderboard'));
+const BossHUD = lazy(() => import('./components/BossHUD'));
+const Tutorial = lazy(() => import('./components/Tutorial'));
+const ContextualTips = lazy(() => import('./components/ContextualTips'));
+const HelpButton = lazy(() => import('./components/HelpButton'));
+
+// Eager load lightweight components
+import PlayerMovement from './components/PlayerMovement';
+import GameLoop from './components/GameLoop';
+import ActiveEffects from './components/ActiveEffects';
+import AuthScreen from './components/AuthScreen';
+import PlayerProfile from './components/PlayerProfile';
+
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className="animate-spin text-2xl">⏳</div>
+    </div>
+  );
+}
 
 function WelcomeScreen({ onStart }: { onStart: () => void }) {
   return (
@@ -111,24 +124,26 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen overflow-hidden relative">
-      <GameMap />
-      <ARView />
-      <TimeSelector />
-      <BossHUD />
-      <GameHUD />
-      <ActiveEffects />
-      <Inventory />
-      <QuestPanel />
-      <ChatSim />
-      <Leaderboard />
-      <PlayerProfile />
-      <MiniMap />
-      <PlayerMovement />
-      <GameLoop />
-      <EffectsLoop />
-      <Tutorial />
-      <ContextualTips />
-      <HelpButton />
+      <Suspense fallback={<LoadingFallback />}>
+        <GameMap />
+        <ARView />
+        <TimeSelector />
+        <BossHUD />
+        <GameHUD />
+        <ActiveEffects />
+        <Inventory />
+        <QuestPanel />
+        <ChatSim />
+        <Leaderboard />
+        <PlayerProfile />
+        <MiniMap />
+        <PlayerMovement />
+        <GameLoop />
+        <EffectsLoop />
+        <Tutorial />
+        <ContextualTips />
+        <HelpButton />
+      </Suspense>
     </div>
   );
 }
