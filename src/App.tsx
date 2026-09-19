@@ -3,6 +3,8 @@ import { useGameStore } from './store/gameStore';
 import { useInventoryStore } from './store/inventoryStore';
 import { useAuthStore } from './store/authStore';
 import { useMultiplayerStore } from './store/multiplayerStore';
+import { useCityStore } from './store/cityStore';
+import { getActiveSeasonalEvent } from './data/seasonalEvents';
 import { eras } from './data/evoraHistory';
 
 // Lazy load heavy components for better performance
@@ -25,6 +27,8 @@ import GameLoop from './components/GameLoop';
 import ActiveEffects from './components/ActiveEffects';
 import AuthScreen from './components/AuthScreen';
 import PlayerProfile from './components/PlayerProfile';
+import CitySelector from './components/CitySelector';
+import SeasonalEventBanner from './components/SeasonalEventBanner';
 
 // Loading fallback component
 function LoadingFallback() {
@@ -128,6 +132,8 @@ export default function App() {
         <GameMap />
         <ARView />
         <TimeSelector />
+        <CitySelector />
+        <SeasonalEventBanner />
         <BossHUD />
         <GameHUD />
         <ActiveEffects />
