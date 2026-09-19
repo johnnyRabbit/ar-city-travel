@@ -1,16 +1,53 @@
 import { create } from 'zustand';
 import { GameState, Zombie, Era, GameNotification, Player } from '../types';
-import { historicalEvents, zombieTemplates } from '../data/evoraHistory';
+import { zombieTemplates } from '../data/evoraHistory';
 import {
   buildStreetGraph,
   findPath,
   findNearestNode,
   getNodeCoords,
   calculateDistance,
+  StreetNode,
+  StreetEdge,
 } from '../data/streetGraph';
 import { soundSystem } from '../utils/sounds';
+import { useCityStore } from './cityStore';
+import { cities } from '../data/cities';
 
-const streetGraph = buildStreetGraph();
+// Função para obter dados da cidade atual
+function getCityData() {
+  const currentCity = useCityStore.getState().currentCity;
+  const city = cities[currentCity];
+  return {
+    events: city.events,
+    nodes: city.streetNodes,
+    edges: city.streetEdges,
+    centerLat: city.centerLat,
+    centerLng: city.centerLng,
+  };
+}
+
+// Construir grafo dinamicamente baseado na cidade
+function buildDynamicStreetGraph() {
+  const { nodes, edges } = getCityData();
+  const graph = new Map<string, { nodeId: string; distance: number }[]>();
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
+  nodes.forEach((node) => graph.set(node.id, []));
+
+  edges.forEach((edge) => {
+    const fromNode = nodeMap.get(edge.from);
+    const toNode = nodeMap.get(edge.to);
+    if (!fromNode || !toNode) return;
+    const distance = calculateDistance(fromNode.lat, fromNode.lng, toNode.lat, toNode.lng);
+    graph.get(edge.from)?.push({ nodeId: edge.to, distance });
+    graph.get(edge.to)?.push({ nodeId: edge.from, distance });
+  });
+
+  return graph;
+}
+
+let streetGraph = buildDynamicStreetGraph();
 
 const initialPlayer: Player = {
   id: 'player-1',
@@ -41,6 +78,7 @@ interface GameStore extends GameState {
   spawnZombies: (count: number) => void;
   killZombie: (id: string, getDamageMultiplier?: () => number, onKill?: () => void) => void;
   resetGame: (onReset?: () => void) => void;
+  reloadCityData: () => void;
 }
 
 function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: number): Zombie {
@@ -101,7 +139,7 @@ function moveZombieAlongPath(zombie: Zombie): Zombie {
 export const useGameStore = create<GameStore>((set, get) => ({
   player: initialPlayer,
   zombies: [],
-  historicalEvents: historicalEvents,
+  historicalEvents: getCityData().events,
   selectedEra: 'all',
   gameActive: false,
   arMode: false,
@@ -406,12 +444,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       player: initialPlayer,
       zombies: [],
-      historicalEvents: historicalEvents,
+      historicalEvents: getCityData().events,
       selectedEra: 'all',
       gameActive: false,
       arMode: false,
       score: 0,
       notifications: [],
+    });
+  },
+
+  reloadCityData: () => {
+    // Reconstruir o grafo com os dados da nova cidade
+    streetGraph = buildDynamicStreetGraph();
+    const cityData = getCityData();
+    
+    set({
+      historicalEvents: cityData.events,
+      player: {
+        ...initialPlayer,
+        lat: cityData.centerLat,
+        lng: cityData.centerLng,
+      },
+      zombies: [],
+      selectedEra: 'all',
     });
   },
 }));
