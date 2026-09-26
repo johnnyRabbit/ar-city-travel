@@ -1,8 +1,17 @@
-import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useGameStore } from './store/gameStore';
 import TimeSelector from './components/TimeSelector';
+import MiniMap from './components/MiniMap';
+import Compass from './components/Compass';
+import NotificationSystem from './components/NotificationSystem';
+import ProximityIndicator from './components/ProximityIndicator';
+import ProgressBar from './components/ProgressBar';
+import Tutorial from './components/Tutorial';
+import WelcomeScreen from './components/WelcomeScreen';
+import GameOverScreen from './components/GameOverScreen';
+import ZombieDirectionArrows from './components/ZombieDirectionArrows';
 
 // Ícone do jogador
 const playerIcon = L.divIcon({
@@ -30,34 +39,14 @@ const createEventIcon = (icon: string, discovered: boolean) =>
     iconAnchor: [16, 16],
   });
 
-function WelcomeScreen({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[3000] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full text-center">
-        <div className="text-6xl mb-4 animate-bounce">🏛️</div>
-        <h1 className="text-4xl font-bold text-white mb-2">
-          Évora <span className="text-purple-400">Through Time</span>
-        </h1>
-        <p className="text-gray-300 text-sm mb-8">
-          Explora a história enquanto foges de zombies!
-        </p>
-        <button
-          onClick={onStart}
-          className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-2xl font-bold text-lg shadow-2xl hover:scale-105 transition-transform"
-        >
-          🚀 Começar Aventura
-        </button>
-      </div>
-    </div>
-  );
-}
+
 
 function GameHUD() {
   const { player, score, gameActive, startGame, stopGame, toggleAR, arMode, resetGame } = useGameStore();
 
   return (
     <>
-      {/* Player Info */}
+      {/* Player Info - Topo */}
       <div className="absolute top-2 left-2 right-2 z-[1000] flex items-center justify-between gap-2">
         <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 flex items-center gap-2">
           <span className="text-xl">{player.avatar}</span>
@@ -82,8 +71,8 @@ function GameHUD() {
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="absolute bottom-28 left-2 right-2 z-[1000] flex gap-2 justify-center">
+      {/* Action Buttons - Fundo */}
+      <div className="absolute bottom-20 left-2 right-2 z-[1000] flex gap-2 justify-center">
         {!gameActive ? (
           <button
             onClick={startGame}
@@ -116,31 +105,10 @@ function GameHUD() {
       {/* Reset Button */}
       <button
         onClick={resetGame}
-        className="absolute bottom-44 right-2 z-[1000] w-12 h-12 bg-white/95 text-gray-600 rounded-full shadow-lg font-bold text-lg hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center"
+        className="absolute bottom-4 right-2 z-[1000] w-12 h-12 bg-white/95 text-gray-600 rounded-full shadow-lg font-bold text-lg hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center"
       >
         🔄
       </button>
-
-      {/* Game Over */}
-      {!gameActive && player.health <= 0 && (
-        <div className="absolute inset-0 z-[2000] bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 text-center max-w-sm w-full shadow-2xl">
-            <div className="text-5xl mb-3">💀</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Game Over!</h2>
-            <div className="bg-purple-50 rounded-lg p-3 mb-4">
-              <p className="text-sm text-purple-800">
-                Pontuação: <span className="font-bold text-lg">{score}</span>
-              </p>
-            </div>
-            <button
-              onClick={resetGame}
-              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:scale-105 transition-transform active:scale-95"
-            >
-              🔄 Tentar Novamente
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }
@@ -257,16 +225,61 @@ function GameMap() {
 
 export default function App() {
   const [started, setStarted] = useState(false);
+  const { gameActive, player, resetGame } = useGameStore();
+
+  // Tutorial só aparece na primeira vez
+  const [showTutorial, setShowTutorial] = useState(() => {
+    return !localStorage.getItem('hasSeenTutorial');
+  });
+
+  const handleStartGame = () => {
+    setStarted(true);
+    setShowTutorial(false);
+  };
+
+  const handleRestart = () => {
+    resetGame();
+    setStarted(false);
+  };
 
   if (!started) {
-    return <WelcomeScreen onStart={() => setStarted(true)} />;
+    return <WelcomeScreen onStart={handleStartGame} />;
   }
 
   return (
     <div className="w-screen h-screen overflow-hidden relative">
+      {/* Mapa Principal */}
       <GameMap />
-      <TimeSelector />
+
+      {/* Indicadores de Proximidade */}
+      <ProximityIndicator />
+
+      {/* Setas de Direção dos Zombies */}
+      <ZombieDirectionArrows />
+
+      {/* HUD */}
       <GameHUD />
+
+      {/* Mini-Mapa */}
+      <MiniMap />
+
+      {/* Bússola */}
+      <Compass />
+
+      {/* Seletor de Eras */}
+      <TimeSelector />
+
+      {/* Barra de Progresso */}
+      <ProgressBar />
+
+      {/* Sistema de Notificações */}
+      <NotificationSystem />
+
+      {/* Game Over Screen */}
+      {!gameActive && player.health <= 0 && <GameOverScreen onRestart={handleRestart} />}
+
+      {/* Tutorial */}
+      {showTutorial && <Tutorial />}
     </div>
   );
 }
