@@ -1,3 +1,5 @@
+export type Era = 'romano' | 'visigodo' | 'mouro' | 'medieval' | 'renascimento' | 'moderno';
+
 export interface HistoricalEvent {
   id: string;
   title: string;
@@ -11,43 +13,32 @@ export interface HistoricalEvent {
   points: number;
 }
 
-export type Era = 'romano' | 'visigodo' | 'mouro' | 'medieval' | 'renascimento' | 'moderno';
-
-export interface EraInfo {
-  id: Era;
-  name: string;
-  yearRange: [number, number];
-  color: string;
-  emoji: string;
-}
-
 export interface Zombie {
   id: string;
   name: string;
+  emoji: string;
   lat: number;
   lng: number;
-  speed: number;
   health: number;
   maxHealth: number;
-  era: Era;
-  emoji: string;
-  active: boolean;
+  speed: number;
   path: string[];
   currentNodeIndex: number;
   targetNodeId: string | null;
   lastRecalcTime: number;
+  active: boolean;
 }
 
 export interface Player {
   id: string;
   name: string;
+  avatar: string;
   lat: number;
   lng: number;
   health: number;
   maxHealth: number;
   points: number;
   level: number;
-  avatar: string;
 }
 
 export interface GameState {
@@ -58,12 +49,24 @@ export interface GameState {
   gameActive: boolean;
   arMode: boolean;
   score: number;
-  notifications: GameNotification[];
+  notifications: Notification[];
 }
 
-export interface GameNotification {
+export interface Notification {
   id: string;
   message: string;
-  type: 'info' | 'warning' | 'success' | 'danger';
+  type: 'success' | 'error' | 'warning' | 'info';
   timestamp: number;
+}
+
+export interface StreetNode {
+  id: string;
+  lat: number;
+  lng: number;
+  name?: string;
+}
+
+export interface StreetEdge {
+  from: string;
+  to: string;
 }

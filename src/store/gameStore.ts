@@ -1,64 +1,17 @@
 import { create } from 'zustand';
-import { GameState, Zombie, Era, GameNotification, Player } from '../types';
-import { zombieTemplates } from '../data/evoraHistory';
-import {
-  buildStreetGraph,
-  findPath,
-  findNearestNode,
-  getNodeCoords,
-  calculateDistance,
-  StreetNode,
-  StreetEdge,
-} from '../data/streetGraph';
-import { soundSystem } from '../utils/sounds';
-import { useCityStore } from './cityStore';
-import { cities } from '../data/cities';
-
-// Função para obter dados da cidade atual
-function getCityData() {
-  const currentCity = useCityStore.getState().currentCity;
-  const city = cities[currentCity];
-  return {
-    events: city.events,
-    nodes: city.streetNodes,
-    edges: city.streetEdges,
-    centerLat: city.centerLat,
-    centerLng: city.centerLng,
-  };
-}
-
-// Construir grafo dinamicamente baseado na cidade
-function buildDynamicStreetGraph() {
-  const { nodes, edges } = getCityData();
-  const graph = new Map<string, { nodeId: string; distance: number }[]>();
-  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-
-  nodes.forEach((node) => graph.set(node.id, []));
-
-  edges.forEach((edge) => {
-    const fromNode = nodeMap.get(edge.from);
-    const toNode = nodeMap.get(edge.to);
-    if (!fromNode || !toNode) return;
-    const distance = calculateDistance(fromNode.lat, fromNode.lng, toNode.lat, toNode.lng);
-    graph.get(edge.from)?.push({ nodeId: edge.to, distance });
-    graph.get(edge.to)?.push({ nodeId: edge.from, distance });
-  });
-
-  return graph;
-}
-
-let streetGraph = buildDynamicStreetGraph();
+import { GameState, Zombie, Era, Notification, Player } from '../types';
+import { historicalEvents } from '../data/evoraHistory';
 
 const initialPlayer: Player = {
   id: 'player-1',
   name: 'Explorador',
+  avatar: '🧑‍🚀',
   lat: 38.5702,
-  lng: -7.9095,
+  lng: -7.9100,
   health: 100,
   maxHealth: 100,
   points: 0,
   level: 1,
-  avatar: '🧑‍🚀',
 };
 
 interface GameStore extends GameState {
@@ -68,78 +21,22 @@ interface GameStore extends GameState {
   stopGame: () => void;
   toggleAR: () => void;
   addZombie: (zombie: Zombie) => void;
-  updateZombies: (getActiveEffects?: () => any[]) => void;
-  damagePlayer: (amount: number, applyShield?: (amount: number) => number) => void;
+  updateZombies: () => void;
+  damagePlayer: (amount: number) => void;
   healPlayer: (amount: number) => void;
   discoverEvent: (id: string) => void;
   addPoints: (points: number) => void;
-  addNotification: (message: string, type: GameNotification['type']) => void;
+  addNotification: (message: string, type: Notification['type']) => void;
   removeNotification: (id: string) => void;
   spawnZombies: (count: number) => void;
-  killZombie: (id: string, getDamageMultiplier?: () => number, onKill?: () => void) => void;
-  resetGame: (onReset?: () => void) => void;
-  reloadCityData: () => void;
-}
-
-function calculatePathForZombie(zombie: Zombie, playerLat: number, playerLng: number): Zombie {
-  const zombieNodeId = findNearestNode(zombie.lat, zombie.lng);
-  const playerNodeId = findNearestNode(playerLat, playerLng);
-  const path = findPath(streetGraph, zombieNodeId, playerNodeId);
-
-  if (path.length < 2) {
-    return zombie;
-  }
-
-  let startIndex = path.indexOf(zombieNodeId);
-  if (startIndex === -1) startIndex = 0;
-
-  return {
-    ...zombie,
-    path,
-    currentNodeIndex: startIndex,
-    targetNodeId: path[startIndex + 1] || path[path.length - 1],
-    lastRecalcTime: Date.now(),
-  };
-}
-
-function moveZombieAlongPath(zombie: Zombie): Zombie {
-  if (!zombie.path || zombie.path.length === 0) return zombie;
-
-  const targetCoords = getNodeCoords(zombie.targetNodeId || zombie.path[zombie.path.length - 1]);
-  if (!targetCoords) return zombie;
-
-  const dLat = targetCoords.lat - zombie.lat;
-  const dLng = targetCoords.lng - zombie.lng;
-  const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-  const moveSpeed = zombie.speed;
-
-  if (dist < 0.00008) {
-    const nextIndex = zombie.currentNodeIndex + 1;
-
-    if (nextIndex < zombie.path.length) {
-      const newTargetId = zombie.path[nextIndex];
-      return {
-        ...zombie,
-        currentNodeIndex: nextIndex,
-        targetNodeId: newTargetId,
-      };
-    }
-    return zombie;
-  }
-
-  const stepLat = (dLat / dist) * moveSpeed;
-  const stepLng = (dLng / dist) * moveSpeed;
-
-  const newLat = Math.abs(stepLat) > Math.abs(dLat) ? targetCoords.lat : zombie.lat + stepLat;
-  const newLng = Math.abs(stepLng) > Math.abs(dLng) ? targetCoords.lng : zombie.lng + stepLng;
-
-  return { ...zombie, lat: newLat, lng: newLng };
+  killZombie: (id: string) => void;
+  resetGame: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
   player: initialPlayer,
   zombies: [],
-  historicalEvents: getCityData().events,
+  historicalEvents: historicalEvents,
   selectedEra: 'all',
   gameActive: false,
   arMode: false,
@@ -154,7 +51,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startGame: () => {
     set({ gameActive: true });
     get().spawnZombies(3);
-    get().addNotification('🎮 Jogo iniciado! Os zombies vêm pelas ruas!', 'info');
+    get().addNotification('🎮 Jogo iniciado!', 'info');
   },
 
   stopGame: () => set({ gameActive: false, zombies: [] }),
@@ -164,83 +61,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addZombie: (zombie) =>
     set((state) => ({ zombies: [...state.zombies, zombie] })),
 
-  updateZombies: (getActiveEffects) => {
-    const { player, zombies } = get();
-
-    if (zombies.length === 0) return;
-
-    // Get active effects from callback (avoids circular deps)
-    let zombieSlowdown = 1;
-    if (getActiveEffects) {
-      const activeEffects = getActiveEffects();
-      zombieSlowdown = activeEffects.reduce((slow: number, e: any) => {
-        if (e.effect?.zombieSlowdown) return slow * (1 - e.effect.zombieSlowdown);
-        return slow;
-      }, 1);
-    }
-
-    const updatedZombies = zombies.map((z) => {
-      if (!z.active) return z;
-
-      const distToPlayer = calculateDistance(z.lat, z.lng, player.lat, player.lng);
-
-      if (distToPlayer < 10) {
-        get().damagePlayer(1);
-      }
-
-      let updatedZombie = z;
-      const effectiveSpeed = z.speed * zombieSlowdown;
-
-      if (distToPlayer < 30) {
-        const dLat = player.lat - z.lat;
-        const dLng = player.lng - z.lng;
+  updateZombies: () => {
+    // Simplificado - zombies movem-se em linha reta
+    set((state) => ({
+      zombies: state.zombies.map((z) => {
+        if (!z.active) return z;
+        const dLat = state.player.lat - z.lat;
+        const dLng = state.player.lng - z.lng;
         const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-        
-        if (dist > 0.00001) {
-          const stepLat = (dLat / dist) * effectiveSpeed;
-          const stepLng = (dLng / dist) * effectiveSpeed;
-          
-          updatedZombie = {
-            ...z,
-            lat: z.lat + stepLat,
-            lng: z.lng + stepLng,
-          };
+        if (dist < 0.0001) {
+          get().damagePlayer(5);
+          return z;
         }
-        
-        return updatedZombie;
-      }
-
-      const needsRecalc = !z.path || z.path.length < 2 || 
-                          z.currentNodeIndex >= z.path.length - 1 ||
-                          distToPlayer < 50;
-
-      if (needsRecalc) {
-        updatedZombie = calculatePathForZombie(z, player.lat, player.lng);
-      }
-
-      updatedZombie = moveZombieAlongPath(updatedZombie);
-
-      return updatedZombie;
-    });
-
-    set({ zombies: updatedZombies });
+        return {
+          ...z,
+          lat: z.lat + (dLat / dist) * z.speed,
+          lng: z.lng + (dLng / dist) * z.speed,
+        };
+      }),
+    }));
   },
 
-  damagePlayer: (amount, applyShield) => {
-    let actualDamage = amount;
-    if (applyShield) {
-      actualDamage = applyShield(amount);
-    }
-    
-    if (actualDamage === 0) return;
-
-    soundSystem.playDamage();
-
+  damagePlayer: (amount) =>
     set((state) => {
-      const newHealth = Math.max(0, state.player.health - actualDamage);
+      const newHealth = Math.max(0, state.player.health - amount);
       if (newHealth <= 0) {
-        soundSystem.playGameOver();
-        
         return {
           player: { ...state.player, health: 0 },
           gameActive: false,
@@ -248,16 +93,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
             ...state.notifications,
             {
               id: Date.now().toString(),
-              message: '💀 Foste apanhado! Game Over!',
-              type: 'danger' as const,
+              message: '💀 Game Over!',
+              type: 'error' as const,
               timestamp: Date.now(),
             },
           ],
         };
       }
       return { player: { ...state.player, health: newHealth } };
-    });
-  },
+    }),
 
   healPlayer: (amount) =>
     set((state) => ({
@@ -271,25 +115,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => {
       const event = state.historicalEvents.find((e) => e.id === id);
       if (!event || event.discovered) return state;
-      const newEvents = state.historicalEvents.map((e) =>
-        e.id === id ? { ...e, discovered: true } : e
-      );
-      
-      soundSystem.playDiscover();
-      
       return {
-        historicalEvents: newEvents,
+        historicalEvents: state.historicalEvents.map((e) =>
+          e.id === id ? { ...e, discovered: true } : e
+        ),
         score: state.score + event.points,
         player: {
           ...state.player,
           points: state.player.points + event.points,
-          level: Math.floor((state.player.points + event.points) / 200) + 1,
         },
         notifications: [
           ...state.notifications,
           {
             id: Date.now().toString(),
-            message: `📜 Descoberto: ${event.title} (+${event.points} pts)`,
+            message: `📜 ${event.title} (+${event.points} pts)`,
             type: 'success' as const,
             timestamp: Date.now(),
           },
@@ -312,161 +151,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })),
 
   removeNotification: (id) =>
-    set((state) => ({ notifications: state.notifications.filter((n) => n.id !== id) })),
+    set((state) => ({
+      notifications: state.notifications.filter((n) => n.id !== id),
+    })),
 
   spawnZombies: (count) => {
     const { player } = get();
-
     for (let i = 0; i < count; i++) {
-      const template = zombieTemplates[Math.floor(Math.random() * zombieTemplates.length)];
-
-      let spawnNodeId: string | null = null;
-      let attempts = 0;
-      
-      // Procurar nós entre 100-300 metros do jogador
-      while (!spawnNodeId && attempts < 50) {
-        const randomNodeIdx = Math.floor(Math.random() * 45) + 1;
-        const nodeId = `n${String(randomNodeIdx).padStart(2, '0')}`;
-        const nodeCoords = getNodeCoords(nodeId);
-        if (nodeCoords) {
-          const dist = calculateDistance(player.lat, player.lng, nodeCoords.lat, nodeCoords.lng);
-          // Spawn entre 100-300 metros do jogador
-          if (dist >= 100 && dist <= 300) {
-            spawnNodeId = nodeId;
-          }
-        }
-        attempts++;
-      }
-
-      // Se não encontrou, spawnar no nó mais próximo que esteja a 100-300m
-      if (!spawnNodeId) {
-        let bestNode: string | null = null;
-        let bestDist = Infinity;
-        
-        for (let idx = 1; idx <= 45; idx++) {
-          const nodeId = `n${String(idx).padStart(2, '0')}`;
-          const nodeCoords = getNodeCoords(nodeId);
-          if (nodeCoords) {
-            const dist = calculateDistance(player.lat, player.lng, nodeCoords.lat, nodeCoords.lng);
-            if (dist >= 100 && dist <= 300 && dist < bestDist) {
-              bestDist = dist;
-              bestNode = nodeId;
-            }
-          }
-        }
-        
-        // Último recurso: usar qualquer nó que não seja o do jogador
-        if (!bestNode) {
-          const playerNodeId = findNearestNode(player.lat, player.lng);
-          for (let idx = 1; idx <= 45; idx++) {
-            const nodeId = `n${String(idx).padStart(2, '0')}`;
-            if (nodeId !== playerNodeId) {
-              bestNode = nodeId;
-              break;
-            }
-          }
-        }
-        
-        spawnNodeId = bestNode;
-      }
-
-      if (!spawnNodeId) continue;
-
-      const spawnCoords = getNodeCoords(spawnNodeId);
-      if (!spawnCoords) continue;
-
-      let zombie: Zombie = {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 0.005 + Math.random() * 0.01;
+      get().addZombie({
         id: `zombie-${Date.now()}-${i}`,
-        name: template.name,
-        lat: spawnCoords.lat,
-        lng: spawnCoords.lng,
-        speed: template.speed,
-        health: 30 + Math.floor(Math.random() * 20),
+        name: 'Zombie',
+        emoji: '🧟',
+        lat: player.lat + Math.cos(angle) * distance,
+        lng: player.lng + Math.sin(angle) * distance,
+        health: 50,
         maxHealth: 50,
-        era: template.era,
-        emoji: template.emoji,
-        active: true,
+        speed: 0.0002,
         path: [],
         currentNodeIndex: 0,
         targetNodeId: null,
-        lastRecalcTime: 0,
-      };
-
-      zombie = calculatePathForZombie(zombie, player.lat, player.lng);
-
-      if (zombie.path.length >= 2) {
-        const firstNodeCoords = getNodeCoords(zombie.path[0]);
-        if (firstNodeCoords) {
-          zombie.lat = firstNodeCoords.lat;
-          zombie.lng = firstNodeCoords.lng;
-        }
-      }
-
-      get().addZombie(zombie);
+        lastRecalcTime: Date.now(),
+        active: true,
+      });
     }
   },
 
-  killZombie: (id, getDamageMultiplier, onKill) => {
-    let damageMultiplier = 1;
-    if (getDamageMultiplier) {
-      damageMultiplier = getDamageMultiplier();
-    }
-
-    const points = Math.round(50 * damageMultiplier);
-
-    soundSystem.playKillZombie();
-
-    if (onKill) {
-      onKill();
-    }
-
+  killZombie: (id) =>
     set((state) => ({
       zombies: state.zombies.filter((z) => z.id !== id),
-      score: state.score + points,
-      player: { ...state.player, points: state.player.points + points },
-      notifications: [
-        ...state.notifications,
-        {
-          id: Date.now().toString(),
-          message: `🗡️ Zombie eliminado! (+${points} pts)`,
-          type: 'success' as const,
-          timestamp: Date.now(),
-        },
-      ],
-    }));
-  },
+      score: state.score + 50,
+      player: { ...state.player, points: state.player.points + 50 },
+    })),
 
-  resetGame: (onReset) => {
-    if (onReset) {
-      onReset();
-    }
-    
+  resetGame: () =>
     set({
       player: initialPlayer,
       zombies: [],
-      historicalEvents: getCityData().events,
+      historicalEvents: historicalEvents,
       selectedEra: 'all',
       gameActive: false,
       arMode: false,
       score: 0,
       notifications: [],
-    });
-  },
-
-  reloadCityData: () => {
-    // Reconstruir o grafo com os dados da nova cidade
-    streetGraph = buildDynamicStreetGraph();
-    const cityData = getCityData();
-    
-    set({
-      historicalEvents: cityData.events,
-      player: {
-        ...initialPlayer,
-        lat: cityData.centerLat,
-        lng: cityData.centerLng,
-      },
-      zombies: [],
-      selectedEra: 'all',
-    });
-  },
+    }),
 }));

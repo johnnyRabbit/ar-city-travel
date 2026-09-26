@@ -1,56 +1,54 @@
-import { useGameStore } from '../store/gameStore';
-import { eras } from '../data/evoraHistory';
 import { useState } from 'react';
+import { useGameStore } from '../store/gameStore';
+import { Era } from '../types';
+
+const eras: { id: Era | 'all'; name: string; emoji: string }[] = [
+  { id: 'all', name: 'Todas', emoji: '🌍' },
+  { id: 'romano', name: 'Romano', emoji: '🏛️' },
+  { id: 'medieval', name: 'Medieval', emoji: '🏰' },
+  { id: 'renascimento', name: 'Renascimento', emoji: '🎨' },
+  { id: 'moderno', name: 'Moderno', emoji: '🏭' },
+];
 
 export default function TimeSelector() {
+  const [isOpen, setIsOpen] = useState(false);
   const { selectedEra, setSelectedEra } = useGameStore();
-  const [isExpanded, setIsExpanded] = useState(false);
+
+  const currentEra = eras.find(e => e.id === selectedEra) || eras[0];
 
   return (
     <>
-      {/* Compact Era Selector */}
+      {/* Botão Compacto */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute top-14 left-1/2 -translate-x-1/2 z-[999] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 flex items-center gap-2"
+        onClick={() => setIsOpen(!isOpen)}
+        className="absolute top-14 left-1/2 -translate-x-1/2 z-[999] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 flex items-center gap-2 hover:scale-105 transition-transform active:scale-95"
       >
-        <span className="text-sm">
-          {selectedEra === 'all' ? '🌍' : eras.find(e => e.id === selectedEra)?.emoji}
-        </span>
-        <span className="text-xs font-medium text-gray-700">
-          {selectedEra === 'all' ? 'Todas as Eras' : eras.find(e => e.id === selectedEra)?.name}
-        </span>
-        <span className="text-xs text-gray-500">{isExpanded ? '▲' : '▼'}</span>
+        <span className="text-sm">{currentEra.emoji}</span>
+        <span className="text-xs font-medium text-gray-700">{currentEra.name}</span>
+        <span className="text-xs text-gray-500">{isOpen ? '▲' : '▼'}</span>
       </button>
 
-      {/* Expanded Era Panel */}
-      {isExpanded && (
+      {/* Painel Expandido */}
+      {isOpen && (
         <>
           <div 
             className="fixed inset-0 z-[998]" 
-            onClick={() => setIsExpanded(false)}
+            onClick={() => setIsOpen(false)}
           />
           <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[999] bg-white/98 backdrop-blur-sm rounded-xl shadow-2xl p-3 max-w-[90vw]">
             <div className="grid grid-cols-2 gap-2">
-              <button 
-                onClick={() => { setSelectedEra('all'); setIsExpanded(false); }}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  selectedEra === 'all' 
-                    ? 'bg-gray-800 text-white shadow-md' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                🌍 Todas
-              </button>
               {eras.map((era) => (
-                <button 
-                  key={era.id} 
-                  onClick={() => { setSelectedEra(era.id); setIsExpanded(false); }}
+                <button
+                  key={era.id}
+                  onClick={() => {
+                    setSelectedEra(era.id);
+                    setIsOpen(false);
+                  }}
                   className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                    selectedEra === era.id 
-                      ? 'text-white shadow-md' 
+                    selectedEra === era.id
+                      ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
-                  style={selectedEra === era.id ? { backgroundColor: era.color } : {}}
                 >
                   {era.emoji} {era.name}
                 </button>
