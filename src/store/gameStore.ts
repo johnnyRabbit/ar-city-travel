@@ -21,15 +21,16 @@ interface GameStore extends GameState {
   stopGame: () => void;
   toggleAR: () => void;
   addZombie: (zombie: Zombie) => void;
-  updateZombies: () => void;
-  damagePlayer: (amount: number) => void;
+  updateZombies: (getActiveEffects?: () => any[]) => void;
+  damagePlayer: (amount: number, onDamage?: (amount: number) => void) => void;
   healPlayer: (amount: number) => void;
   discoverEvent: (id: string) => void;
   addPoints: (points: number) => void;
   addNotification: (message: string, type: Notification['type']) => void;
   removeNotification: (id: string) => void;
   spawnZombies: (count: number) => void;
-  killZombie: (id: string) => void;
+  killZombie: (id: string, damageMultiplier?: () => number, onKill?: () => void) => void;
+  reloadCityData: () => void;
   resetGame: () => void;
 }
 
@@ -61,7 +62,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addZombie: (zombie) =>
     set((state) => ({ zombies: [...state.zombies, zombie] })),
 
-  updateZombies: () => {
+  updateZombies: (getActiveEffects) => {
     // Simplificado - zombies movem-se em linha reta
     set((state) => ({
       zombies: state.zombies.map((z) => {
@@ -82,7 +83,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }));
   },
 
-  damagePlayer: (amount) =>
+  damagePlayer: (amount, onDamage) => {
+    if (onDamage) onDamage(amount);
     set((state) => {
       const newHealth = Math.max(0, state.player.health - amount);
       if (newHealth <= 0) {
@@ -101,7 +103,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
       return { player: { ...state.player, health: newHealth } };
-    }),
+    });
+  },
 
   healPlayer: (amount) =>
     set((state) => ({
@@ -178,12 +181,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  killZombie: (id) =>
+  killZombie: (id, damageMultiplier, onKill) => {
+    const multiplier = damageMultiplier ? damageMultiplier() : 1;
+    const points = Math.round(50 * multiplier);
     set((state) => ({
       zombies: state.zombies.filter((z) => z.id !== id),
-      score: state.score + 50,
-      player: { ...state.player, points: state.player.points + 50 },
-    })),
+      score: state.score + points,
+      player: { ...state.player, points: state.player.points + points },
+    }));
+    if (onKill) onKill();
+  },
+
+  reloadCityData: () => {
+    // Reload historical events for the current city
+    const { historicalEvents: allEvents } = get();
+    set({
+      historicalEvents: allEvents.map(e => ({ ...e, discovered: false })),
+      zombies: [],
+    });
+    get().addNotification('🏙️ Dados da cidade recarregados!', 'info');
+  },
 
   resetGame: () =>
     set({

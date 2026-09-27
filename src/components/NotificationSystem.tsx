@@ -22,11 +22,12 @@ export default function NotificationSystem() {
   return (
     <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[2000] flex flex-col gap-2 max-w-md w-full px-4">
       {notifications.slice(-3).map((notification) => {
-        const colors = {
+        const colors: Record<string, string> = {
           success: 'bg-green-500/95 border-green-400',
           error: 'bg-red-500/95 border-red-400',
           warning: 'bg-yellow-500/95 border-yellow-400',
           info: 'bg-blue-500/95 border-blue-400',
+          danger: 'bg-red-600/95 border-red-500',
         };
 
         return (

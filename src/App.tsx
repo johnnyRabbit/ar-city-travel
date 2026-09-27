@@ -12,6 +12,7 @@ import Tutorial from './components/Tutorial';
 import WelcomeScreen from './components/WelcomeScreen';
 import GameOverScreen from './components/GameOverScreen';
 import ZombieDirectionArrows from './components/ZombieDirectionArrows';
+import ARView from './components/ARView';
 
 // Ícone do jogador
 const playerIcon = L.divIcon({
@@ -274,6 +275,9 @@ export default function App() {
 
       {/* Sistema de Notificações */}
       <NotificationSystem />
+
+      {/* AR View - Realidade Aumentada */}
+      <ARView />
 
       {/* Game Over Screen */}
       {!gameActive && player.health <= 0 && <GameOverScreen onRestart={handleRestart} />}

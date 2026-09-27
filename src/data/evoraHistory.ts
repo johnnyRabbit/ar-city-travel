@@ -1,4 +1,13 @@
-import { HistoricalEvent, StreetNode, StreetEdge } from '../types';
+import { HistoricalEvent, StreetNode, StreetEdge, Era } from '../types';
+
+export const eras: { id: Era; name: string; color: string; icon: string }[] = [
+  { id: 'romano', name: 'Romano', color: '#DC2626', icon: '🏛️' },
+  { id: 'visigodo', name: 'Visigodo', color: '#7C3AED', icon: '⚔️' },
+  { id: 'mouro', name: 'Mouro', color: '#059669', icon: '🕌' },
+  { id: 'medieval', name: 'Medieval', color: '#D97706', icon: '⛪' },
+  { id: 'renascimento', name: 'Renascimento', color: '#2563EB', icon: '🎓' },
+  { id: 'moderno', name: 'Moderno', color: '#6366F1', icon: '🏪' },
+];
 
 export const historicalEvents: HistoricalEvent[] = [
   // Romano
