@@ -94,7 +94,7 @@ function HistoricalMarkers() {
   const filteredEvents = selectedEra === 'all' ? historicalEvents : historicalEvents.filter((e) => e.era === selectedEra);
 
   const createEventIcon = (event: typeof historicalEvents[0]) => {
-    const eraInfo = eras.find((e) => e.id === event.era);
+    const eraInfo = eras.find((e: { id: string; name: string; color: string; icon: string }) => e.id === event.era);
     const color = eraInfo?.color || '#666';
     const isDiscovered = event.discovered;
     return L.divIcon({

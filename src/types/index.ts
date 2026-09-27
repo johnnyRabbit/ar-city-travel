@@ -55,7 +55,7 @@ export interface GameState {
 export interface Notification {
   id: string;
   message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: 'success' | 'error' | 'warning' | 'info' | 'danger';
   timestamp: number;
 }
 

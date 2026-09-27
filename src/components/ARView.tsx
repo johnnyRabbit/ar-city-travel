@@ -273,7 +273,7 @@ export default function ARView() {
           const pos = getScreenPosition(event.lat, event.lng);
           if (!pos.isVisible) return null;
 
-          const eraInfo = eras.find(e => e.id === event.era);
+          const eraInfo = eras.find((e: { id: string; name: string; color: string; icon: string }) => e.id === event.era);
           const distanceMeters = Math.round(pos.distance);
 
           return (
