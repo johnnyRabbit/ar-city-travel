@@ -12,6 +12,27 @@ export default function GameLoop() {
 
     console.log('[GameLoop] ✅ Started!');
 
+    // Spawn initial power-ups around the player
+    const player = useGameStore.getState().player;
+    const inventoryStore = useInventoryStore.getState();
+    inventoryStore.spawnRandomMapItems(5, player.lat, player.lng);
+
+    // Tick effects every 500ms
+    const effectTickInterval = setInterval(() => {
+      const invStore = useInventoryStore.getState();
+      invStore.tickEffects(500);
+    }, 500);
+
+    // Spawn new power-ups every 30 seconds
+    const itemSpawnInterval = setInterval(() => {
+      const currentPlayer = useGameStore.getState().player;
+      const invStore = useInventoryStore.getState();
+      const activeItems = invStore.mapItems.filter(m => !m.collected).length;
+      if (activeItems < 8) {
+        invStore.spawnRandomMapItems(2, currentPlayer.lat, currentPlayer.lng);
+      }
+    }, 30000);
+
     // Move zombies every 100ms
     const moveInterval = setInterval(() => {
       const gameStore = useGameStore.getState();
@@ -70,6 +91,8 @@ export default function GameLoop() {
       clearInterval(bossCheckInterval);
       clearInterval(bossUpdateInterval);
       clearInterval(questInterval);
+      clearInterval(effectTickInterval);
+      clearInterval(itemSpawnInterval);
     };
   }, [gameActive]);
 

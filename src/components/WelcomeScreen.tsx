@@ -55,12 +55,20 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
               <span>Elimina zombies que te perseguem pelas ruas da cidade</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-2xl">⏰</span>
-              <span>Filtra por eras: Romano, Medieval, Renascimento, Moderno</span>
+              <span className="text-2xl">📱</span>
+              <span>Ativa o modo AR para ver zombies e locais na câmara real</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-2xl">⭐</span>
-              <span>Ganha pontos descobrindo locais e eliminando zombies</span>
+              <span className="text-2xl">🎒</span>
+              <span>Apanha power-ups e usa itens do inventário</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-2xl">📜</span>
+              <span>Completa missões diárias e ganha recompensas</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-2xl">👹</span>
+              <span>Enfrenta bosses históricos com habilidades especiais</span>
             </li>
           </ul>
         </div>

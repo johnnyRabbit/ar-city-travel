@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { useState } from 'react';
 import { useGameStore } from './store/gameStore';
+import GameLoop from './components/GameLoop';
+import PlayerMovement from './components/PlayerMovement';
+import GameMap from './components/GameMap';
+import ARView from './components/ARView';
 import TimeSelector from './components/TimeSelector';
 import MiniMap from './components/MiniMap';
 import Compass from './components/Compass';
@@ -12,35 +14,16 @@ import Tutorial from './components/Tutorial';
 import WelcomeScreen from './components/WelcomeScreen';
 import GameOverScreen from './components/GameOverScreen';
 import ZombieDirectionArrows from './components/ZombieDirectionArrows';
-import ARView from './components/ARView';
-
-// Ícone do jogador
-const playerIcon = L.divIcon({
-  html: '<div style="font-size: 24px;">🧑‍🚀</div>',
-  className: 'player-marker',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-});
-
-// Ícone dos zombies
-const createZombieIcon = (emoji: string) =>
-  L.divIcon({
-    html: `<div style="font-size: 20px;">${emoji}</div>`,
-    className: 'zombie-marker',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  });
-
-// Ícone dos eventos
-const createEventIcon = (icon: string, discovered: boolean) =>
-  L.divIcon({
-    html: `<div style="font-size: 20px; background: ${discovered ? '#10B981' : '#6366F1'}; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 2px solid white;">${icon}</div>`,
-    className: 'event-marker',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-  });
-
-
+import Inventory from './components/Inventory';
+import QuestPanel from './components/QuestPanel';
+import BossHUD from './components/BossHUD';
+import HelpButton from './components/HelpButton';
+import ContextualTips from './components/ContextualTips';
+import ActiveEffects from './components/ActiveEffects';
+import CitySelector from './components/CitySelector';
+import SeasonalEventBanner from './components/SeasonalEventBanner';
+import PlayerStats from './components/PlayerStats';
+import DamageOverlay from './components/DamageOverlay';
 
 function GameHUD() {
   const { player, score, gameActive, startGame, stopGame, toggleAR, arMode, resetGame } = useGameStore();
@@ -114,116 +97,6 @@ function GameHUD() {
   );
 }
 
-function GameMap() {
-  const { player, zombies, historicalEvents, selectedEra, discoverEvent, killZombie } = useGameStore();
-
-  const filteredEvents =
-    selectedEra === 'all'
-      ? historicalEvents
-      : historicalEvents.filter((e) => e.era === selectedEra);
-
-  return (
-    <MapContainer
-      center={[player.lat, player.lng]}
-      zoom={17}
-      className="w-full h-full z-0"
-      zoomControl={false}
-    >
-      <TileLayer
-        attribution='&copy; OpenStreetMap'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-
-      {/* Player */}
-      <Marker position={[player.lat, player.lng]} icon={playerIcon}>
-        <Popup>
-          <div className="text-center">
-            <strong>{player.name}</strong>
-            <br />
-            ❤️ {player.health}/{player.maxHealth}
-          </div>
-        </Popup>
-      </Marker>
-
-      {/* Zombies */}
-      {zombies
-        .filter((z) => z.active)
-        .map((zombie) => (
-          <Marker
-            key={zombie.id}
-            position={[zombie.lat, zombie.lng]}
-            icon={createZombieIcon(zombie.emoji)}
-            eventHandlers={{ click: () => killZombie(zombie.id) }}
-          >
-            <Popup>
-              <div className="text-center">
-                <strong>{zombie.name}</strong>
-                <br />
-                ❤️ {zombie.health}/{zombie.maxHealth}
-                <br />
-                <button
-                  onClick={() => killZombie(zombie.id)}
-                  className="mt-1 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
-                >
-                  ⚔️ Atacar
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-      {/* Historical Events */}
-      {filteredEvents.map((event) => {
-        const dist = Math.sqrt(
-          Math.pow(event.lat - player.lat, 2) + Math.pow(event.lng - player.lng, 2)
-        );
-        const isNear = dist < 0.001;
-
-        return (
-          <Marker
-            key={event.id}
-            position={[event.lat, event.lng]}
-            icon={createEventIcon(event.icon, event.discovered)}
-            eventHandlers={{
-              click: () => {
-                if (isNear && !event.discovered) {
-                  discoverEvent(event.id);
-                }
-              },
-            }}
-          >
-            <Popup>
-              <div className="max-w-[200px]">
-                <h3 className="font-bold text-sm">
-                  {event.icon} {event.title}
-                </h3>
-                <p className="text-xs text-gray-600">
-                  Ano: {event.year > 0 ? `${event.year} d.C.` : `${Math.abs(event.year)} a.C.`}
-                </p>
-                <p className="text-xs mt-1">{event.description}</p>
-                {event.discovered ? (
-                  <span className="text-green-600 text-xs font-bold">
-                    ✅ Descoberto (+{event.points} pts)
-                  </span>
-                ) : isNear ? (
-                  <button
-                    onClick={() => discoverEvent(event.id)}
-                    className="mt-1 px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600"
-                  >
-                    🔍 Descobrir (+{event.points} pts)
-                  </button>
-                ) : (
-                  <span className="text-orange-600 text-xs">📍 Aproxima-te!</span>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
-    </MapContainer>
-  );
-}
-
 export default function App() {
   const [started, setStarted] = useState(false);
   const { gameActive, player, resetGame } = useGameStore();
@@ -236,6 +109,7 @@ export default function App() {
   const handleStartGame = () => {
     setStarted(true);
     setShowTutorial(false);
+    localStorage.setItem('hasSeenTutorial', 'true');
   };
 
   const handleRestart = () => {
@@ -249,8 +123,17 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen overflow-hidden relative">
-      {/* Mapa Principal */}
+      {/* Game Loop - Core game logic */}
+      <GameLoop />
+
+      {/* Player Movement - Keyboard + GPS */}
+      <PlayerMovement />
+
+      {/* Mapa Principal (completo com power-ups, streets, etc.) */}
       <GameMap />
+
+      {/* AR View - Realidade Aumentada */}
+      <ARView />
 
       {/* Indicadores de Proximidade */}
       <ProximityIndicator />
@@ -258,7 +141,7 @@ export default function App() {
       {/* Setas de Direção dos Zombies */}
       <ZombieDirectionArrows />
 
-      {/* HUD */}
+      {/* HUD Principal */}
       <GameHUD />
 
       {/* Mini-Mapa */}
@@ -276,8 +159,35 @@ export default function App() {
       {/* Sistema de Notificações */}
       <NotificationSystem />
 
-      {/* AR View - Realidade Aumentada */}
-      <ARView />
+      {/* Boss HUD */}
+      <BossHUD />
+
+      {/* Inventário */}
+      <Inventory />
+
+      {/* Painel de Missões */}
+      <QuestPanel />
+
+      {/* Efeitos Ativos */}
+      <ActiveEffects />
+
+      {/* Seletor de Cidade */}
+      <CitySelector />
+
+      {/* Banner de Evento Sazonal */}
+      <SeasonalEventBanner />
+
+      {/* Dicas Contextuais */}
+      <ContextualTips />
+
+      {/* Botão de Ajuda */}
+      <HelpButton />
+
+      {/* Estatísticas do Jogador */}
+      <PlayerStats />
+
+      {/* Overlay de Dano */}
+      <DamageOverlay />
 
       {/* Game Over Screen */}
       {!gameActive && player.health <= 0 && <GameOverScreen onRestart={handleRestart} />}
