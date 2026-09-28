@@ -110,6 +110,11 @@ html, body {
   background: #1a1a2e;
 }
 
+/* Dark theme for OpenStreetMap tiles */
+.leaflet-tile-pane {
+  filter: brightness(0.7) contrast(1.2) saturate(0.8) hue-rotate(180deg) invert(1);
+}
+
 /* Remove default Leaflet styling */
 .leaflet-control-attribution {
   background: rgba(0, 0, 0, 0.5) !important;
@@ -121,11 +126,6 @@ html, body {
 
 .leaflet-control-attribution a {
   color: rgba(255, 255, 255, 0.7) !important;
-}
-
-/* Dark map tiles overlay for professional look */
-.leaflet-tile-pane {
-  filter: saturate(0.8) contrast(1.1);
 }
 
 /* Marker base styles */

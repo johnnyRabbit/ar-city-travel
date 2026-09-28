@@ -214,8 +214,8 @@ export default function GameMap() {
     <div className="w-full h-full relative">
       <MapContainer center={[player.lat, player.lng]} zoom={17} className="w-full h-full z-0" zoomControl={false}>
         <TileLayer 
-          attribution='&copy; OpenStreetMap' 
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' 
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapUpdater />
         <LocateMeButton />
