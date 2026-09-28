@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import { useGameStore } from '../store/gameStore';
@@ -9,12 +9,52 @@ import StreetOverlay from './StreetOverlay';
 import ZombiePaths from './ZombiePaths';
 import PowerUpMarkers from './PowerUpMarkers';
 import OtherPlayers from './OtherPlayers';
+import LocateMeButton from './LocateMeButton';
 
+// Ícone do jogador melhorado - mais visível e com animação
 const playerIcon = L.divIcon({
-  html: '<div style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">🧑‍🚀</div>',
+  html: `
+    <div style="position: relative; width: 40px; height: 40px;">
+      <!-- Pulse ring -->
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.3);
+        transform: translate(-50%, -50%);
+        animation: pulse-ring 2s ease-out infinite;
+      "></div>
+      <!-- Player avatar -->
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 28px;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+        z-index: 10;
+      ">🧑‍🚀</div>
+      <!-- Blue dot indicator -->
+      <div style="
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #3B82F6;
+        border: 2px solid white;
+        box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+      "></div>
+    </div>
+  `,
   className: 'player-marker',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
 
 const createZombieIcon = (emoji: string) =>
@@ -28,18 +68,53 @@ const createZombieIcon = (emoji: string) =>
 function MapUpdater() {
   const map = useMap();
   const { player } = useGameStore();
-  useEffect(() => { map.setView([player.lat, player.lng], map.getZoom()); }, [player.lat, player.lng, map]);
+  const isFirstUpdate = useRef(true);
+
+  useEffect(() => {
+    // Primeira atualização: posição instantânea
+    if (isFirstUpdate.current) {
+      map.setView([player.lat, player.lng], map.getZoom(), { animate: false });
+      isFirstUpdate.current = false;
+      return;
+    }
+
+    // Atualizações seguintes: pan suave
+    map.panTo([player.lat, player.lng], { animate: true, duration: 0.5 });
+  }, [player.lat, player.lng, map]);
+
   return null;
 }
 
 function PlayerMarker() {
   const { player } = useGameStore();
+  
   return (
     <>
-      <Marker position={[player.lat, player.lng]} icon={playerIcon}>
-        <Popup><div className="text-center"><strong>{player.name}</strong><br/>Nível {player.level} | ❤️ {player.health}/{player.maxHealth}</div></Popup>
+      {/* Círculo de precisão do GPS (menor e mais subtil) */}
+      <CircleMarker 
+        center={[player.lat, player.lng]} 
+        radius={15} 
+        pathOptions={{ 
+          color: '#3B82F6', 
+          fillColor: '#3B82F6', 
+          fillOpacity: 0.1,
+          weight: 1,
+          opacity: 0.3
+        }} 
+      />
+      
+      {/* Marcador do jogador */}
+      <Marker position={[player.lat, player.lng]} icon={playerIcon} zIndexOffset={1000}>
+        <Popup>
+          <div className="text-center">
+            <strong>{player.name}</strong>
+            <br/>
+            Nível {player.level} | ❤️ {player.health}/{player.maxHealth}
+            <br/>
+            <span className="text-xs text-gray-500">📍 {player.lat.toFixed(4)}, {player.lng.toFixed(4)}</span>
+          </div>
+        </Popup>
       </Marker>
-      <CircleMarker center={[player.lat, player.lng]} radius={30} pathOptions={{ color: '#3B82F6', fillColor: '#3B82F6', fillOpacity: 0.1 }} />
     </>
   );
 }
@@ -140,6 +215,7 @@ export default function GameMap() {
       <MapContainer center={[player.lat, player.lng]} zoom={17} className="w-full h-full z-0" zoomControl={false}>
         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <MapUpdater />
+        <LocateMeButton />
         <StreetOverlay />
         <ZombiePaths />
         <PlayerMarker />

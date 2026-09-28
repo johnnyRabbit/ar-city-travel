@@ -24,6 +24,7 @@ import CitySelector from './components/CitySelector';
 import SeasonalEventBanner from './components/SeasonalEventBanner';
 import PlayerStats from './components/PlayerStats';
 import DamageOverlay from './components/DamageOverlay';
+import PlayerLocationIndicator from './components/PlayerLocationIndicator';
 
 function GameHUD() {
   const { player, score, gameActive, startGame, stopGame, toggleAR, arMode, resetGame } = useGameStore();
@@ -188,6 +189,9 @@ export default function App() {
 
       {/* Overlay de Dano */}
       <DamageOverlay />
+
+      {/* Indicador de Localização do Jogador */}
+      <PlayerLocationIndicator />
 
       {/* Game Over Screen */}
       {!gameActive && player.health <= 0 && <GameOverScreen onRestart={handleRestart} />}
