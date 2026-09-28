@@ -7,7 +7,8 @@ export default function HelpButton() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="absolute top-4 right-4 z-[1000] w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-lg hover:bg-white transition-all active:scale-95"
+        className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-xl hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        title="Ajuda"
       >
         ❓
       </button>
@@ -18,20 +19,20 @@ export default function HelpButton() {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm"
         onClick={() => setIsOpen(false)}
       />
 
       {/* Help Panel */}
       <div className="fixed inset-0 z-[2001] flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto pointer-events-auto">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto pointer-events-auto border border-white/10">
           {/* Header */}
-          <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-t-3xl">
+          <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-t-3xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">📖 Ajuda</h2>
+              <h2 className="text-2xl font-bold text-white">📖 Como Jogar</h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-95"
+                className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-95 text-xl"
               >
                 ✕
               </button>
@@ -39,99 +40,94 @@ export default function HelpButton() {
           </div>
 
           {/* Content */}
-          <div className="p-4 space-y-4">
+          <div className="p-6 space-y-5">
             {/* Mobile Controls */}
-            <div className="bg-blue-50 rounded-xl p-3">
-              <h3 className="font-bold text-sm text-blue-900 mb-2">📱 Controlos Mobile</h3>
-              <ul className="text-xs text-blue-800 space-y-1">
-                <li>• <strong>Mover:</strong> Anda fisicamente (GPS)</li>
-                <li>• <strong>Interagir:</strong> Toca nos markers</li>
-                <li>• <strong>Atacar:</strong> Toca nos zombies</li>
-                <li>• <strong>AR:</strong> Botão 📱 AR</li>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <h3 className="font-bold text-base text-white mb-3 flex items-center gap-2">
+                <span className="text-2xl">📱</span> Controlos Mobile
+              </h3>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong className="text-white">Mover:</strong> Anda fisicamente (GPS)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong className="text-white">Interagir:</strong> Toca nos markers</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong className="text-white">Atacar:</strong> Toca nos zombies</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong className="text-white">AR:</strong> Botão 📱 AR</span>
+                </li>
               </ul>
             </div>
 
             {/* Desktop Controls */}
-            <div className="bg-green-50 rounded-xl p-3">
-              <h3 className="font-bold text-sm text-green-900 mb-2">💻 Controlos PC</h3>
-              <ul className="text-xs text-green-800 space-y-1">
-                <li>• <strong>Mover:</strong> WASD ou setas</li>
-                <li>• <strong>Interagir:</strong> Clica nos markers</li>
-                <li>• <strong>Atacar:</strong> Clica nos zombies</li>
-                <li>• <strong>AR:</strong> Botão 📱 AR</li>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <h3 className="font-bold text-base text-white mb-3 flex items-center gap-2">
+                <span className="text-2xl">💻</span> Controlos PC
+              </h3>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  <span><strong className="text-white">Mover:</strong> WASD ou setas</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  <span><strong className="text-white">Interagir:</strong> Clica nos markers</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  <span><strong className="text-white">Atacar:</strong> Clica nos zombies</span>
+                </li>
               </ul>
             </div>
 
-            {/* Game Elements */}
-            <div className="bg-purple-50 rounded-xl p-3">
-              <h3 className="font-bold text-sm text-purple-900 mb-2">🎮 Elementos do Jogo</h3>
-              <div className="text-xs text-purple-800 space-y-2">
-                <div className="flex items-start gap-2">
-                  <span className="text-lg">🗺️</span>
-                  <div>
-                    <strong>Mapa:</strong> Mostra a cidade de Évora com locais históricos
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-lg">🧟</span>
-                  <div>
-                    <strong>Zombies:</strong> Inimigos que te perseguem. Elimina-os para ganhar pontos!
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-lg">📜</span>
-                  <div>
-                    <strong>Locais Históricos:</strong> Descobre a história de Évora
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-lg">🎒</span>
-                  <div>
-                    <strong>Itens:</strong> Power-ups como escudos, poções e armas
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-lg">👹</span>
-                  <div>
-                    <strong>Bosses:</strong> Inimigos poderosos com recompensas especiais
-                  </div>
-                </div>
-              </div>
+            {/* Game Objectives */}
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <h3 className="font-bold text-base text-white mb-3 flex items-center gap-2">
+                <span className="text-2xl">🎯</span> Objetivos
+              </h3>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-400">🏛️</span>
+                  <span>Descobre locais históricos</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">🧟</span>
+                  <span>Elimina zombies para ganhar pontos</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400">🎒</span>
+                  <span>Apanha power-ups e usa itens</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">📜</span>
+                  <span>Completa missões diárias</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400">👹</span>
+                  <span>Derrota bosses históricos</span>
+                </li>
+              </ul>
             </div>
 
             {/* Tips */}
-            <div className="bg-yellow-50 rounded-xl p-3">
-              <h3 className="font-bold text-sm text-yellow-900 mb-2">💡 Dicas</h3>
-              <ul className="text-xs text-yellow-800 space-y-1">
-                <li>• Explora todos os locais históricos para ganhar pontos</li>
-                <li>• Usa power-ups estrategicamente</li>
-                <li>• Completa missões para recompensas extras</li>
-                <li>• O modo AR mostra zombies e locais em realidade aumentada</li>
-                <li>• Os zombies movem-se pelas ruas, não em linha reta!</li>
-              </ul>
-            </div>
-
-            {/* AR Mode */}
-            <div className="bg-pink-50 rounded-xl p-3">
-              <h3 className="font-bold text-sm text-pink-900 mb-2">📱 Modo AR</h3>
-              <ul className="text-xs text-pink-800 space-y-1">
-                <li>• Permite acesso à câmara e orientação</li>
-                <li>• Move o telemóvel para ver zombies e locais</li>
-                <li>• Toca nos zombies para os eliminar</li>
+            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-4 border border-purple-500/30">
+              <h3 className="font-bold text-base text-white mb-2 flex items-center gap-2">
+                <span className="text-2xl">💡</span> Dicas
+              </h3>
+              <ul className="text-sm text-gray-300 space-y-1">
+                <li>• Usa o modo AR para uma experiência imersiva</li>
                 <li>• Aproxima-te dos locais para os descobrir</li>
-                <li>• Clica em "Sair AR" para voltar ao mapa</li>
+                <li>• Power-ups dão vantagens temporárias</li>
+                <li>• Bosses aparecem periodicamente</li>
               </ul>
             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 p-4 rounded-b-3xl border-t">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-sm hover:from-purple-600 hover:to-pink-600 transition-all active:scale-95 shadow-lg"
-            >
-              Entendido! ✓
-            </button>
           </div>
         </div>
       </div>
