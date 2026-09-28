@@ -18,6 +18,11 @@ import Inventory from './components/Inventory';
 import QuestPanel from './components/QuestPanel';
 import HelpButton from './components/HelpButton';
 import PlayerStats from './components/PlayerStats';
+import Compass from './components/Compass';
+import Leaderboard from './components/Leaderboard';
+import ActiveEffects from './components/ActiveEffects';
+import CitySelector from './components/CitySelector';
+import SeasonalEventBanner from './components/SeasonalEventBanner';
 
 export default function App() {
   const [started, setStarted] = useState(false);
@@ -108,11 +113,6 @@ export default function App() {
         <TimeSelector />
       </div>
 
-      {/* ========== BOTTOM LEFT - Mini Map ========== */}
-      <div className="absolute bottom-4 left-4 z-[1000]">
-        <MiniMap />
-      </div>
-
       {/* ========== BOTTOM CENTER - Action Buttons ========== */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
         {!gameActive ? (
@@ -154,6 +154,20 @@ export default function App() {
       <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-3">
         <Inventory />
         <QuestPanel />
+        <Leaderboard />
+      </div>
+
+      {/* ========== TOP RIGHT - Additional Controls ========== */}
+      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+        <CitySelector />
+        <SeasonalEventBanner />
+      </div>
+
+      {/* ========== BOTTOM LEFT - Compass & Effects ========== */}
+      <div className="absolute bottom-4 left-4 z-[1000] flex flex-col gap-3 items-start">
+        <MiniMap />
+        <Compass />
+        <ActiveEffects />
       </div>
 
       {/* ========== Sistema de Notificações ========== */}

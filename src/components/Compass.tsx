@@ -29,13 +29,16 @@ export default function Compass() {
     // Normalizar para 0-360
     if (angle < 0) angle += 360;
 
-    return { angle, distance: minDistance };
+    // Converter distância para metros (aproximado)
+    const distanceMeters = Math.round(minDistance * 111000);
+
+    return { angle, distance: minDistance, distanceMeters };
   };
 
   const nearestZombie = getNearestZombieAngle();
 
   return (
-    <div className="absolute bottom-20 right-2 z-[999] w-16 h-16 bg-slate-800/90 backdrop-blur-sm rounded-full border-2 border-white/20 shadow-2xl flex items-center justify-center">
+    <div className="relative w-16 h-16 bg-white/10 backdrop-blur-md rounded-full border-2 border-white/20 shadow-2xl flex items-center justify-center">
       {/* Norte */}
       <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/60">
         N
@@ -47,15 +50,22 @@ export default function Compass() {
       {/* Indicador de zombie */}
       {nearestZombie && (
         <div
-          className="absolute w-2 h-2 bg-red-500 rounded-full"
+          className="absolute w-3 h-3 bg-red-500 rounded-full"
           style={{
             transform: `rotate(${nearestZombie.angle}deg) translateY(-20px)`,
+            boxShadow: '0 0 8px rgba(239, 68, 68, 0.8)',
           }}
-        />
+        >
+          <div className="absolute inset-0 bg-red-500 rounded-full animate-ping" />
+        </div>
       )}
 
-      {/* Centro */}
-      <div className="absolute w-2 h-2 bg-blue-400 rounded-full border border-white" />
+      {/* Tooltip com distância */}
+      {nearestZombie && (
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm rounded-lg px-2 py-1 whitespace-nowrap">
+          <span className="text-xs text-white font-mono">{nearestZombie.distanceMeters}m</span>
+        </div>
+      )}
     </div>
   );
 }
