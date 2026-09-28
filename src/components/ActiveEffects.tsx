@@ -11,15 +11,17 @@ export default function ActiveEffects() {
   const totalEffects = activeEffects.length + (shieldHP > 0 ? 1 : 0);
 
   return (
-    <>
+    <div className="relative">
       {/* Compact Effects Indicator */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute bottom-44 right-28 z-[999] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-1"
+        className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20 relative"
+        title="Efeitos Ativos"
       >
-        <span className="text-sm">✨</span>
-        <span className="text-xs font-bold text-purple-600">{totalEffects}</span>
-        <span className="text-xs text-gray-500">{isExpanded ? '▲' : '▼'}</span>
+        <span className="text-2xl">✨</span>
+        <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white/30">
+          {totalEffects}
+        </span>
       </button>
 
       {/* Expanded Effects Panel */}
@@ -29,28 +31,35 @@ export default function ActiveEffects() {
             className="fixed inset-0 z-[998]" 
             onClick={() => setIsExpanded(false)}
           />
-          <div className="absolute top-32 right-2 z-[999] bg-white/98 backdrop-blur-sm rounded-xl shadow-2xl p-3 max-w-[250px] max-h-[300px] overflow-y-auto">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-bold text-xs text-gray-800">Efeitos Ativos</h3>
-              <button onClick={() => setIsExpanded(false)} className="text-gray-500 hover:text-gray-700 text-lg">✕</button>
+          <div className="absolute bottom-16 right-0 z-[999] bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl p-4 w-[280px] max-h-[400px] overflow-y-auto border-2 border-white/20">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                <span>✨</span> Efeitos Ativos
+              </h3>
+              <button 
+                onClick={() => setIsExpanded(false)} 
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95"
+              >
+                ✕
+              </button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Shield */}
               {shieldHP > 0 && (
-                <div className="bg-blue-50 rounded-lg p-2 border border-blue-200">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">🛡️</span>
+                <div className="bg-blue-500/10 rounded-xl p-3 border-2 border-blue-500/30">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🛡️</span>
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-blue-800">Escudo</p>
-                      <div className="w-full bg-blue-200 rounded-full h-1.5 mt-0.5">
+                      <p className="text-sm font-bold text-white">Escudo</p>
+                      <div className="w-full bg-white/10 rounded-full h-2 mt-1 overflow-hidden">
                         <div
-                          className="h-1.5 rounded-full bg-blue-500 transition-all"
+                          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all"
                           style={{ width: `${Math.min(100, (shieldHP / 100) * 100)}%` }}
                         />
                       </div>
+                      <p className="text-xs text-blue-400 mt-1">{Math.round(shieldHP)} HP</p>
                     </div>
-                    <span className="text-xs font-bold text-blue-800">{Math.round(shieldHP)}</span>
                   </div>
                 </div>
               )}
@@ -63,20 +72,20 @@ export default function ActiveEffects() {
                 return (
                   <div
                     key={effect.id}
-                    className="bg-purple-50 rounded-lg p-2 border border-purple-200"
+                    className="bg-purple-500/10 rounded-xl p-3 border-2 border-purple-500/30"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{effect.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-purple-800 truncate">{effect.name}</p>
-                        <div className="w-full bg-purple-200 rounded-full h-1.5 mt-0.5">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{effect.emoji}</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-white">{effect.name}</p>
+                        <div className="w-full bg-white/10 rounded-full h-2 mt-1 overflow-hidden">
                           <div
-                            className="h-1.5 rounded-full bg-purple-500 transition-all"
+                            className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
+                        <p className="text-xs text-purple-400 mt-1">{seconds}s restantes</p>
                       </div>
-                      <span className="text-xs font-bold text-purple-800">{seconds}s</span>
                     </div>
                   </div>
                 );
@@ -85,6 +94,6 @@ export default function ActiveEffects() {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }

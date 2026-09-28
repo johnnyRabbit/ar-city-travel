@@ -17,80 +17,87 @@ export default function CitySelector() {
   };
 
   return (
-    <>
+    <div className="relative">
       {/* City Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="absolute top-20 left-2 z-[999] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 flex items-center gap-2 hover:scale-105 transition-transform active:scale-95"
+        className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        title="Escolher Cidade"
       >
-        <span className="text-xl">{currentCityConfig?.emoji}</span>
-        <span className="text-xs font-medium text-gray-700">{currentCityConfig?.name}</span>
-        <span className="text-xs text-gray-500">▼</span>
+        <span className="text-2xl">{currentCityConfig?.emoji}</span>
       </button>
 
       {/* City Selection Modal */}
       {isOpen && (
         <>
           <div 
-            className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
           <div className="fixed inset-0 z-[2001] flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden pointer-events-auto">
+            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden pointer-events-auto border-2 border-white/10">
               {/* Header */}
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4">
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">🏙️ Escolher Cidade</h2>
+                  <h2 className="text-2xl font-bold text-white">🏙️ Escolher Cidade</h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-95"
+                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-95 text-xl"
                   >
                     ✕
                   </button>
                 </div>
+                <p className="text-white/80 text-sm mt-2">Explora diferentes cidades históricas</p>
               </div>
 
               {/* Cities List */}
               <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
-                {cities.map((city) => (
-                  <button
-                    key={city.id}
-                    onClick={() => handleCityChange(city.id)}
-                    className={`w-full p-4 rounded-xl border-2 transition-all active:scale-95 ${
-                      city.id === currentCity
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-4xl">{city.emoji}</span>
-                      <div className="flex-1 text-left">
-                        <h3 className="font-bold text-gray-800">{city.name}</h3>
-                        <p className="text-xs text-gray-600 mt-1">{city.description}</p>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                          <span>📜 {city.events.length} locais</span>
-                          <span>•</span>
-                          <span>🗺️ {city.streetNodes.length} ruas</span>
+                {cities.map((city) => {
+                  const isCurrent = city.id === currentCity;
+                  
+                  return (
+                    <button
+                      key={city.id}
+                      onClick={() => handleCityChange(city.id)}
+                      className={`w-full p-4 rounded-2xl border-2 transition-all text-left ${
+                        isCurrent
+                          ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/50'
+                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-5xl">{city.emoji}</span>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white text-lg">{city.name}</h3>
+                          <p className="text-gray-400 text-sm">{city.description}</p>
+                          <div className="flex items-center gap-3 mt-2">
+                            <span className="text-xs text-gray-500">
+                              📜 {city.events.length} locais
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              ⏰ {new Set(city.events.map(e => e.era)).size} eras
+                            </span>
+                          </div>
                         </div>
+                        {isCurrent && (
+                          <span className="text-2xl">✅</span>
+                        )}
                       </div>
-                      {city.id === currentCity && (
-                        <span className="text-purple-600 text-xl">✓</span>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Footer */}
-              <div className="bg-gray-50 p-4 border-t">
+              <div className="p-4 bg-white/5 border-t border-white/10">
                 <p className="text-xs text-gray-500 text-center">
-                  Mais cidades em breve: Coimbra, Braga, Faro...
+                  💡 Dica: Cada cidade tem locais históricos únicos para descobrir!
                 </p>
               </div>
             </div>
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }

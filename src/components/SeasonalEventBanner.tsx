@@ -6,10 +6,9 @@ export default function SeasonalEventBanner() {
   if (!activeEvent) return null;
 
   return (
-    <div className="absolute top-32 left-1/2 -translate-x-1/2 z-[999] bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full px-4 py-2 shadow-lg flex items-center gap-2 animate-pulse">
-      <span className="text-xl">{activeEvent.emoji}</span>
-      <span className="text-xs font-bold">{activeEvent.name}</span>
-      <span className="text-xs opacity-80">Ativo!</span>
+    <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center border-2 border-purple-500/30 relative animate-pulse">
+      <span className="text-2xl">{activeEvent.emoji}</span>
+      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
     </div>
   );
 }
