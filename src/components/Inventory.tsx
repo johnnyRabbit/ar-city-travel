@@ -15,7 +15,6 @@ export default function Inventory() {
     const def = getItemDef(invItem.defId);
     if (!def) return;
 
-    // Handle instant effects
     if (def.duration === 0) {
       if (def.effect.healthRestore) {
         healPlayer(def.effect.healthRestore);
@@ -35,34 +34,35 @@ export default function Inventory() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="absolute bottom-32 left-2 z-[999] w-12 h-12 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
+        className="relative w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        title="Inventário"
       >
-        <div className="relative">
-          <span className="text-xl">🎒</span>
-          {inventory.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-              {inventory.length}
-            </span>
-          )}
-        </div>
+        <span className="text-2xl">🎒</span>
+        {inventory.length > 0 && (
+          <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white/30">
+            {inventory.length}
+          </span>
+        )}
       </button>
     );
   }
 
   return (
-    <div className="absolute bottom-20 left-4 z-[1000] bg-white/98 backdrop-blur-sm rounded-xl shadow-2xl p-4 min-w-[280px] max-w-[320px] max-h-[400px] overflow-y-auto">
+    <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl p-4 min-w-[280px] max-w-[320px] max-h-[400px] overflow-y-auto border-2 border-white/20">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="font-bold text-gray-800">🎒 Inventário</h3>
+        <h3 className="font-bold text-white text-lg flex items-center gap-2">
+          <span>🎒</span> Inventário
+        </h3>
         <button
           onClick={() => setIsOpen(false)}
-          className="text-gray-500 hover:text-gray-700 text-xl"
+          className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95"
         >
           ✕
         </button>
       </div>
 
       {inventory.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-4">
+        <p className="text-sm text-gray-400 text-center py-6">
           Nenhum item. Explora o mapa para encontrar itens!
         </p>
       ) : (
@@ -74,20 +74,17 @@ export default function Inventory() {
             return (
               <div
                 key={invItem.id}
-                className="flex items-center gap-2 p-2 rounded-lg border-2 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border-2"
                 style={{ borderColor: rarityColors[def.rarity] }}
               >
-                <span className="text-2xl">{def.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-gray-800 truncate">{def.name}</p>
-                  <p className="text-xs text-gray-500 truncate">{def.description}</p>
-                  {def.duration > 0 && (
-                    <p className="text-xs text-blue-600">⏱️ {def.duration}s</p>
-                  )}
+                <span className="text-3xl">{def.emoji}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-white">{def.name}</p>
+                  <p className="text-xs text-gray-400">{def.description}</p>
                 </div>
                 <button
                   onClick={() => handleUseItem(invItem.id)}
-                  className="px-3 py-1 bg-green-500 text-white rounded text-xs font-bold hover:bg-green-600 whitespace-nowrap"
+                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs font-bold rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all active:scale-95"
                 >
                   Usar
                 </button>

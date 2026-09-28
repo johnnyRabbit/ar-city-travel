@@ -15,10 +15,13 @@ export default function LocateMeButton() {
   return (
     <button
       onClick={handleLocate}
-      className="absolute bottom-36 right-2 z-[999] w-12 h-12 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform active:scale-95 border-2 border-blue-500"
+      className="absolute bottom-24 right-4 z-[999] w-14 h-14 bg-white/10 backdrop-blur-md rounded-full shadow-2xl flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
       title="Centrar no jogador"
     >
-      <span className="text-xl">📍</span>
+      <div className="relative">
+        <span className="text-2xl">📍</span>
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+      </div>
     </button>
   );
 }

@@ -213,7 +213,10 @@ export default function GameMap() {
   return (
     <div className="w-full h-full relative">
       <MapContainer center={[player.lat, player.lng]} zoom={17} className="w-full h-full z-0" zoomControl={false}>
-        <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer 
+          attribution='&copy; OpenStreetMap' 
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
         <MapUpdater />
         <LocateMeButton />
         <StreetOverlay />
@@ -224,6 +227,10 @@ export default function GameMap() {
         <PowerUpMarkers />
         <OtherPlayers />
       </MapContainer>
+      
+      {/* Professional overlays */}
+      <div className="map-overlay" />
+      <div className="vignette" />
     </div>
   );
 }

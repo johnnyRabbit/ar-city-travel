@@ -1,64 +1,56 @@
 @import "tailwindcss";
 
-/* Animações personalizadas */
+/* ========================================
+   ÉVORA THROUGH TIME - Professional UI
+   ======================================== */
+
+/* Base Styles */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
 @keyframes slide-down {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -20px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 @keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes pulse-ring {
-  0% {
-    transform: scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 @keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(139, 92, 246, 0.5), 0 0 10px rgba(139, 92, 246, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.8), 0 0 30px rgba(139, 92, 246, 0.5);
-  }
+  0%, 100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.8), 0 0 40px rgba(139, 92, 246, 0.3); }
 }
 
 @keyframes shake {
@@ -74,85 +66,69 @@
   75% { transform: translateY(-3px) rotate(2deg); }
 }
 
-@keyframes sparkle {
-  0%, 100% { opacity: 0; transform: scale(0); }
-  50% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes radar-sweep {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 @keyframes damage-flash {
   0% { background-color: rgba(239, 68, 68, 0.3); }
   100% { background-color: transparent; }
 }
 
-@keyframes level-up {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.8; }
-  100% { transform: scale(2); opacity: 0; }
+@keyframes boss-entrance {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-@keyframes item-collect {
-  0% { transform: scale(1) translateY(0); opacity: 1; }
-  100% { transform: scale(0.5) translateY(-30px); opacity: 0; }
+@keyframes xp-fill {
+  from { width: 0%; }
 }
 
-.animate-slide-down {
-  animation: slide-down 0.3s ease-out;
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
-.animate-scale-in {
-  animation: scale-in 0.3s ease-out;
+/* Animation Classes */
+.animate-slide-down { animation: slide-down 0.3s ease-out; }
+.animate-scale-in { animation: scale-in 0.3s ease-out; }
+.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.animate-pulse-ring { animation: pulse-ring 1.5s ease-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-glow { animation: glow 2s ease-in-out infinite; }
+.animate-shake { animation: shake 0.5s ease-in-out; }
+.animate-zombie-walk { animation: zombie-walk 0.8s ease-in-out infinite; }
+.animate-damage { animation: damage-flash 0.3s ease-out; }
+.animate-boss-entrance { animation: boss-entrance 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+.animate-xp-fill { animation: xp-fill 1s ease-out; }
+.animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
+
+/* ========================================
+   MAP STYLES - Professional Look
+   ======================================== */
+
+/* Leaflet Container */
+.leaflet-container {
+  font-family: inherit;
+  background: #1a1a2e;
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+/* Remove default Leaflet styling */
+.leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.5) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 9px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px 0 0 0 !important;
 }
 
-.animate-pulse-ring {
-  animation: pulse-ring 1.5s ease-out infinite;
+.leaflet-control-attribution a {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* Dark map tiles overlay for professional look */
+.leaflet-tile-pane {
+  filter: saturate(0.8) contrast(1.1);
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-}
-
-.animate-shake {
-  animation: shake 0.5s ease-in-out;
-}
-
-.animate-zombie-walk {
-  animation: zombie-walk 0.8s ease-in-out infinite;
-}
-
-.animate-sparkle {
-  animation: sparkle 1.5s ease-in-out infinite;
-}
-
-.animate-radar {
-  animation: radar-sweep 3s linear infinite;
-}
-
-.animate-damage {
-  animation: damage-flash 0.3s ease-out;
-}
-
-.animate-level-up {
-  animation: level-up 1s ease-out forwards;
-}
-
-.animate-item-collect {
-  animation: item-collect 0.5s ease-out forwards;
-}
-
-/* Estilos para marcadores do Leaflet */
+/* Marker base styles */
 .player-marker,
 .zombie-marker,
 .event-marker,
@@ -161,50 +137,74 @@
   border: none !important;
 }
 
-/* Efeito de brilho nos marcadores */
-.zombie-marker div {
+/* Player marker glow */
+.player-marker > div {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+}
+
+/* Zombie marker glow */
+.zombie-marker > div {
   filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
 }
 
-.event-marker div {
+/* Event marker glow */
+.event-marker > div {
   filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.5));
 }
 
-.item-marker div {
+/* Item marker glow */
+.item-marker > div {
   filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.6));
 }
 
-/* Melhorias de performance */
-.leaflet-container {
-  font-family: inherit;
-}
-
-/* Efeito de scan lines para AR */
-.ar-scanlines {
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.03) 0px,
-    rgba(0, 0, 0, 0.03) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  pointer-events: none;
-}
-
-/* Glassmorphism effect */
-.glass {
-  background: rgba(255, 255, 255, 0.1);
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  background: rgba(17, 24, 39, 0.95) !important;
+  color: white !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(17, 24, 39, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+}
+
+.leaflet-popup-close-button {
+  color: white !important;
+  font-size: 20px !important;
+  padding: 6px 8px !important;
+}
+
+/* ========================================
+   GLASSMORPHISM EFFECTS
+   ======================================== */
+
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .glass-dark {
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Scrollbar personalizada */
+/* ========================================
+   SCROLLBAR
+   ======================================== */
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -223,45 +223,34 @@
   background: rgba(139, 92, 246, 0.7);
 }
 
-/* Safe areas para mobile */
-.safe-top {
-  padding-top: env(safe-area-inset-top);
-}
+/* ========================================
+   SAFE AREAS - Mobile
+   ======================================== */
 
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
-/* Touch feedback */
-.touch-feedback {
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
+/* ========================================
+   INTERACTIVE ELEMENTS
+   ======================================== */
 
-.touch-feedback:active {
-  transform: scale(0.95);
-}
-
-/* Responsividade */
-@media (max-width: 640px) {
-  .text-5xl {
-    font-size: 2.5rem;
-  }
-  
-  .text-4xl {
-    font-size: 2rem;
-  }
-}
-
-/* Prevent text selection during gameplay */
-.game-ui {
+button, .interactive {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* Smooth transitions for all interactive elements */
-button, .interactive {
-  transition: all 0.2s ease;
+button:active {
+  transform: scale(0.95);
+}
+
+/* ========================================
+   GAME UI
+   ======================================== */
+
+.game-ui {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Health bar animation */
@@ -269,31 +258,42 @@ button, .interactive {
   transition: width 0.5s ease-out, background-color 0.3s ease;
 }
 
-/* Boss entrance animation */
-@keyframes boss-entrance {
-  0% {
-    transform: scale(0) rotate(-180deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2) rotate(10deg);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 640px) {
+  .text-5xl { font-size: 2.5rem; }
+  .text-4xl { font-size: 2rem; }
 }
 
-.animate-boss-entrance {
-  animation: boss-entrance 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+/* ========================================
+   MAP TINT OVERLAY - Professional dark theme
+   ======================================== */
+
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  z-index: 1;
 }
 
-/* XP bar fill animation */
-@keyframes xp-fill {
-  from { width: 0%; }
-}
-
-.animate-xp-fill {
-  animation: xp-fill 1s ease-out;
+/* Vignette effect */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  z-index: 1;
 }

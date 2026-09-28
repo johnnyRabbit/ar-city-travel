@@ -17,15 +17,14 @@ export default function TimeSelector() {
   const currentEra = eras.find(e => e.id === selectedEra) || eras[0];
 
   return (
-    <>
+    <div className="relative">
       {/* Botão Compacto */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute top-14 left-1/2 -translate-x-1/2 z-[999] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 flex items-center gap-2 hover:scale-105 transition-transform active:scale-95"
+        className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        title="Selecionar Era"
       >
-        <span className="text-sm">{currentEra.emoji}</span>
-        <span className="text-xs font-medium text-gray-700">{currentEra.name}</span>
-        <span className="text-xs text-gray-500">{isOpen ? '▲' : '▼'}</span>
+        <span className="text-2xl">{currentEra.emoji}</span>
       </button>
 
       {/* Painel Expandido */}
@@ -35,8 +34,8 @@ export default function TimeSelector() {
             className="fixed inset-0 z-[998]" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[999] bg-white/98 backdrop-blur-sm rounded-xl shadow-2xl p-3 max-w-[90vw]">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="absolute left-16 top-0 z-[999] bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl p-3 border-2 border-white/20">
+            <div className="flex flex-col gap-2">
               {eras.map((era) => (
                 <button
                   key={era.id}
@@ -44,19 +43,20 @@ export default function TimeSelector() {
                     setSelectedEra(era.id);
                     setIsOpen(false);
                   }}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
                     selectedEra === era.id
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg'
+                      : 'bg-white/5 text-gray-300 hover:bg-white/10'
                   }`}
                 >
-                  {era.emoji} {era.name}
+                  <span className="text-xl">{era.emoji}</span>
+                  <span>{era.name}</span>
                 </button>
               ))}
             </div>
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }

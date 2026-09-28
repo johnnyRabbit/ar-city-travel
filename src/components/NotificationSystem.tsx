@@ -20,20 +20,22 @@ export default function NotificationSystem() {
   if (notifications.length === 0) return null;
 
   return (
-    <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[2000] flex flex-col gap-2 max-w-md w-full px-4">
+    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[2000] flex flex-col gap-2 max-w-md w-full px-4 pointer-events-none">
       {notifications.slice(-3).map((notification) => {
         const colors: Record<string, string> = {
-          success: 'bg-green-500/95 border-green-400',
-          error: 'bg-red-500/95 border-red-400',
-          warning: 'bg-yellow-500/95 border-yellow-400',
-          info: 'bg-blue-500/95 border-blue-400',
-          danger: 'bg-red-600/95 border-red-500',
+          success: 'from-green-500/90 to-emerald-600/90 border-green-400',
+          error: 'from-red-500/90 to-red-600/90 border-red-400',
+          warning: 'from-yellow-500/90 to-orange-600/90 border-yellow-400',
+          info: 'from-blue-500/90 to-blue-600/90 border-blue-400',
+          danger: 'from-red-600/90 to-red-700/90 border-red-500',
         };
+
+        const colorClass = colors[notification.type] || colors.info;
 
         return (
           <div
             key={notification.id}
-            className={`${colors[notification.type]} backdrop-blur-sm border-2 rounded-xl shadow-2xl px-4 py-3 text-white font-medium text-sm animate-slide-down`}
+            className={`bg-gradient-to-r ${colorClass} backdrop-blur-md border-2 rounded-2xl shadow-2xl px-5 py-3 text-white font-medium text-sm animate-slide-down pointer-events-auto`}
           >
             {notification.message}
           </div>
