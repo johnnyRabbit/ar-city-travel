@@ -152,6 +152,63 @@ export const itemDefinitions: ItemDef[] = [
     effect: {}, // handled specially
   },
 
+  // NOVOS POWER-UPS ESPECIAIS
+  {
+    id: 'power_aoe',
+    name: 'Explosão Templária',
+    description: 'Elimina todos os zombies num raio de 100m!',
+    type: 'special',
+    rarity: 'legendary',
+    emoji: '💥',
+    era: 'medieval',
+    duration: 0,
+    effect: { aoeRadius: 100 },
+  },
+  {
+    id: 'power_invisibility',
+    name: 'Capa de Invisibilidade',
+    description: 'Os zombies não te veem por 10s.',
+    type: 'special',
+    rarity: 'epic',
+    emoji: '👻',
+    era: 'mouro',
+    duration: 10,
+    effect: { invisibility: true },
+  },
+  {
+    id: 'power_teleport',
+    name: 'Teletransporte Mágico',
+    description: 'Teleporta-te para um local histórico aleatório.',
+    type: 'special',
+    rarity: 'epic',
+    emoji: '✨',
+    era: 'renascimento',
+    duration: 0,
+    effect: { teleport: true },
+  },
+  {
+    id: 'power_time_freeze',
+    name: 'Congelamento Temporal',
+    description: 'Os zombies ficam parados por 8s.',
+    type: 'special',
+    rarity: 'legendary',
+    emoji: '⏸️',
+    era: 'romano',
+    duration: 8,
+    effect: { timeFreeze: true },
+  },
+  {
+    id: 'power_magnet',
+    name: 'Íman de Itens',
+    description: 'Atrai todos os itens num raio de 200m.',
+    type: 'special',
+    rarity: 'rare',
+    emoji: '🧲',
+    era: 'moderno',
+    duration: 15,
+    effect: { magnetRange: 0.02 },
+  },
+
   // NOVOS ITENS - Escudos
   {
     id: 'shield_royal',
