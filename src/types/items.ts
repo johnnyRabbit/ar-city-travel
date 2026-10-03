@@ -1,6 +1,6 @@
 import { Era } from './index';
 
-export type ItemType = 'shield' | 'sword' | 'potion_speed' | 'potion_heal' | 'relic' | 'armor' | 'scroll';
+export type ItemType = 'shield' | 'sword' | 'potion_speed' | 'potion_heal' | 'relic' | 'armor' | 'scroll' | 'special';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
 
@@ -24,6 +24,11 @@ export interface ItemEffect {
   zombieSlowdown?: number; // 0-1, percentage slow
   invincibility?: boolean;
   magnetRange?: number; // attract nearby items
+  // Novos efeitos especiais
+  aoeRadius?: number; // raio de dano em área (metros)
+  invisibility?: boolean; // zombies não veem o jogador
+  teleport?: boolean; // teletransporte para local aleatório
+  timeFreeze?: boolean; // congela zombies
 }
 
 export interface InventoryItem {

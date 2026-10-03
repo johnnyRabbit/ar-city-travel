@@ -23,6 +23,10 @@ import Leaderboard from './components/Leaderboard';
 import ActiveEffects from './components/ActiveEffects';
 import CitySelector from './components/CitySelector';
 import SeasonalEventBanner from './components/SeasonalEventBanner';
+import ParticleSystem from './components/ParticleSystem';
+import ComboSystem from './components/ComboSystem';
+import DifficultySystem from './components/DifficultySystem';
+import DayNightCycle from './components/DayNightCycle';
 
 export default function App() {
   const [started, setStarted] = useState(false);
@@ -172,6 +176,12 @@ export default function App() {
 
       {/* ========== Sistema de Notificações ========== */}
       <NotificationSystem />
+
+      {/* ========== NOVOS SISTEMAS ========== */}
+      <ParticleSystem />
+      <ComboSystem />
+      <DifficultySystem />
+      <DayNightCycle />
 
       {/* ========== Game Over Screen ========== */}
       {!gameActive && player.health <= 0 && <GameOverScreen onRestart={handleRestart} />}

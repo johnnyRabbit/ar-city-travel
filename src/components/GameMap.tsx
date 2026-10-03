@@ -57,12 +57,33 @@ const playerIcon = L.divIcon({
   iconAnchor: [20, 20],
 });
 
-const createZombieIcon = (emoji: string) =>
+const createZombieIcon = (emoji: string, name: string) =>
   L.divIcon({
-    html: `<div style="font-size: 24px; animation: pulse 1s infinite; filter: drop-shadow(0 2px 4px rgba(255,0,0,0.5));">${emoji}</div>`,
+    html: `
+      <div style="position: relative;">
+        <div style="
+          font-size: 24px; 
+          animation: zombie-walk 0.8s ease-in-out infinite;
+          filter: drop-shadow(0 2px 6px rgba(255,0,0,0.6));
+        ">${emoji}</div>
+        <div style="
+          position: absolute;
+          bottom: -8px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 8px;
+          color: white;
+          background: rgba(0,0,0,0.7);
+          padding: 1px 4px;
+          border-radius: 3px;
+          white-space: nowrap;
+          font-weight: bold;
+        ">${name}</div>
+      </div>
+    `,
     className: 'zombie-marker',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
+    iconSize: [32, 40],
+    iconAnchor: [16, 20],
   });
 
 function MapUpdater() {
@@ -149,7 +170,7 @@ function ZombieMarkers() {
         <Marker
           key={zombie.id}
           position={[zombie.lat, zombie.lng]}
-          icon={createZombieIcon(zombie.emoji)}
+          icon={createZombieIcon(zombie.emoji, zombie.name)}
           eventHandlers={{ click: () => handleKillZombie(zombie.id) }}
         >
           <Popup>
