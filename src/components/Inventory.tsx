@@ -15,6 +15,14 @@ export default function Inventory() {
     const def = getItemDef(invItem.defId);
     if (!def) return;
 
+    // Power-ups especiais
+    if (def.type === 'special') {
+      handleSpecialPowerUp(def);
+      useItem(itemId);
+      return;
+    }
+
+    // Itens normais
     if (def.duration === 0) {
       if (def.effect.healthRestore) {
         healPlayer(def.effect.healthRestore);
@@ -30,16 +38,93 @@ export default function Inventory() {
     useItem(itemId);
   };
 
+  const handleSpecialPowerUp = (def: any) => {
+    const gameStore = useGameStore.getState();
+    const inventoryStore = useInventoryStore.getState();
+
+    // 💥 Explosão Templária (AOE)
+    if (def.effect.aoeRadius) {
+      const player = gameStore.player;
+      const radiusInDegrees = def.effect.aoeRadius / 111000; // Converter metros para graus
+      
+      const zombiesInRange = gameStore.zombies.filter(z => {
+        if (!z.active) return false;
+        const dist = Math.sqrt(
+          Math.pow(z.lat - player.lat, 2) + Math.pow(z.lng - player.lng, 2)
+        );
+        return dist <= radiusInDegrees;
+      });
+
+      // Eliminar todos os zombies no raio
+      zombiesInRange.forEach(zombie => {
+        gameStore.killZombie(zombie.id);
+      });
+
+      const pointsGained = zombiesInRange.length * 50;
+      addNotification(`💥 Explosão! ${zombiesInRange.length} zombies eliminados! +${pointsGained} pts`, 'success');
+      
+      // Criar efeito visual de explosão
+      createExplosionEffect(player.lat, player.lng);
+    }
+
+    // 👻 Capa de Invisibilidade
+    if (def.effect.invisibility) {
+      addNotification(`👻 Invisível por ${def.duration}s! Zombies não te veem!`, 'success');
+      // O efeito é aplicado automaticamente pelo inventoryStore
+    }
+
+    // ✨ Teletransporte Mágico
+    if (def.effect.teleport) {
+      const historicalEvents = gameStore.historicalEvents;
+      if (historicalEvents.length > 0) {
+        const randomEvent = historicalEvents[Math.floor(Math.random() * historicalEvents.length)];
+        gameStore.setPlayerPosition(randomEvent.lat, randomEvent.lng);
+        addNotification(`✨ Teleportado para ${randomEvent.title}!`, 'success');
+        
+        // Criar efeito visual de teletransporte
+        createTeleportEffect(randomEvent.lat, randomEvent.lng);
+      }
+    }
+
+    // ⏸️ Congelamento Temporal
+    if (def.effect.timeFreeze) {
+      addNotification(`⏸️ Zombies congelados por ${def.duration}s!`, 'success');
+      // O efeito é aplicado automaticamente pelo inventoryStore
+      // Precisa de modificar o updateZombies para respeitar este efeito
+    }
+
+    // 🧲 Íman de Itens
+    if (def.effect.magnetRange) {
+      addNotification(`🧲 Atrair itens por ${def.duration}s!`, 'success');
+      // O efeito é aplicado automaticamente pelo inventoryStore
+      // Precisa de implementar a lógica de atração de itens
+    }
+  };
+
+  const createExplosionEffect = (lat: number, lng: number) => {
+    // Criar efeito visual de explosão
+    if ((window as any).createSpecialEffect) {
+      (window as any).createSpecialEffect('explosion', 50, 50);
+    }
+  };
+
+  const createTeleportEffect = (lat: number, lng: number) => {
+    // Criar efeito visual de teletransporte
+    if ((window as any).createSpecialEffect) {
+      (window as any).createSpecialEffect('teleport', 50, 50);
+    }
+  };
+
   if (!isOpen) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="relative w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        className="relative w-11 h-11 bg-black/40 backdrop-blur-md rounded-xl shadow-lg flex items-center justify-center hover:bg-black/60 transition-all active:scale-95 border border-white/20"
         title="Inventário"
       >
-        <span className="text-2xl">🎒</span>
+        <span className="text-xl">🎒</span>
         {inventory.length > 0 && (
-          <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white/30">
+          <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white/30">
             {inventory.length}
           </span>
         )}

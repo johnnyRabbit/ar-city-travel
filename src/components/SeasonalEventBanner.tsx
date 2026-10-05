@@ -6,9 +6,9 @@ export default function SeasonalEventBanner() {
   if (!activeEvent) return null;
 
   return (
-    <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center border-2 border-purple-500/30 relative animate-pulse">
-      <span className="text-2xl">{activeEvent.emoji}</span>
-      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+    <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-xl shadow-lg flex items-center justify-center border border-purple-500/30 relative animate-pulse">
+      <span className="text-xl">{activeEvent.emoji}</span>
+      <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full animate-ping" />
     </div>
   );
 }

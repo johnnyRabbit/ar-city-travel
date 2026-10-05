@@ -12,6 +12,11 @@
 - Sistema de notificações
 - Mini-mapa e localização
 - Multi-cidade (Évora, Lisboa, Porto)
+- **Sistema de Partículas** - efeitos visuais ao matar zombies e descobrir locais
+- **Sistema de Combo** - bónus por matar zombies em sequência
+- **Dificuldade Progressiva** - zombies mais rápidos e numerosos com o tempo
+- **Ciclo Dia/Noite** - overlay visual baseado na hora real
+- **Novos Power-ups Especiais** - AOE, Invisibilidade, Teletransporte, Congelamento Temporal, Íman de Itens
 
 ### 🔧 Componentes Existentes mas Não Integrados
 - `Leaderboard.tsx` - Sistema de ranking de jogadores

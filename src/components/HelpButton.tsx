@@ -7,7 +7,7 @@ export default function HelpButton() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-xl hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-lg hover:bg-black/60 transition-all active:scale-95 border border-white/20"
         title="Ajuda"
       >
         ❓

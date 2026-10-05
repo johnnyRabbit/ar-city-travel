@@ -38,22 +38,22 @@ export default function Compass() {
   const nearestZombie = getNearestZombieAngle();
 
   return (
-    <div className="relative w-16 h-16 bg-white/10 backdrop-blur-md rounded-full border-2 border-white/20 shadow-2xl flex items-center justify-center">
+    <div className="relative w-12 h-12 bg-black/40 backdrop-blur-md rounded-full border border-white/20 shadow-lg flex items-center justify-center">
       {/* Norte */}
-      <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/60">
+      <div className="absolute top-0.5 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white/60">
         N
       </div>
 
       {/* Ponteiro da bússola */}
-      <div className="w-1 h-6 bg-gradient-to-t from-transparent to-white/80 rounded-full" />
+      <div className="w-0.5 h-4 bg-gradient-to-t from-transparent to-white/80 rounded-full" />
 
       {/* Indicador de zombie */}
       {nearestZombie && (
         <div
-          className="absolute w-3 h-3 bg-red-500 rounded-full"
+          className="absolute w-2 h-2 bg-red-500 rounded-full"
           style={{
-            transform: `rotate(${nearestZombie.angle}deg) translateY(-20px)`,
-            boxShadow: '0 0 8px rgba(239, 68, 68, 0.8)',
+            transform: `rotate(${nearestZombie.angle}deg) translateY(-14px)`,
+            boxShadow: '0 0 6px rgba(239, 68, 68, 0.8)',
           }}
         >
           <div className="absolute inset-0 bg-red-500 rounded-full animate-ping" />
@@ -62,8 +62,8 @@ export default function Compass() {
 
       {/* Tooltip com distância */}
       {nearestZombie && (
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm rounded-lg px-2 py-1 whitespace-nowrap">
-          <span className="text-xs text-white font-mono">{nearestZombie.distanceMeters}m</span>
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm rounded px-1.5 py-0.5 whitespace-nowrap">
+          <span className="text-[10px] text-white font-mono">{nearestZombie.distanceMeters}m</span>
         </div>
       )}
     </div>

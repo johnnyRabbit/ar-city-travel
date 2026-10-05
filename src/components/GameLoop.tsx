@@ -20,7 +20,11 @@ export default function GameLoop() {
     // Tick effects every 500ms
     const effectTickInterval = setInterval(() => {
       const invStore = useInventoryStore.getState();
+      const gameStore = useGameStore.getState();
       invStore.tickEffects(500);
+      
+      // Aplicar efeito de íman se ativo
+      invStore.tickMagnetEffect(gameStore.player.lat, gameStore.player.lng);
     }, 500);
 
     // Spawn new power-ups every 30 seconds
