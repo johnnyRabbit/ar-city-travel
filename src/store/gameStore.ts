@@ -63,6 +63,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({ zombies: [...state.zombies, zombie] })),
 
   updateZombies: (getActiveEffects) => {
+    const activeEffects = getActiveEffects ? getActiveEffects() : [];
+    
+    // Verificar se há efeito de invisibilidade ou congelamento temporal
+    const isInvisible = activeEffects.some(e => e.effect.invisibility);
+    const isTimeFrozen = activeEffects.some(e => e.effect.timeFreeze);
+    
+    // Se estiver invisível ou tempo congelado, zombies não se movem
+    if (isInvisible || isTimeFrozen) {
+      return;
+    }
+    
     // Movimento realista com zigzag e variação de velocidade
     set((state) => ({
       zombies: state.zombies.map((z) => {

@@ -136,6 +136,62 @@ html, body {
   }
 }
 
+@keyframes explosion {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes teleport {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes freeze {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
 /* Animation Classes */
 .animate-slide-down { animation: slide-down 0.3s ease-out; }
 .animate-scale-in { animation: scale-in 0.3s ease-out; }
@@ -151,6 +207,10 @@ html, body {
 .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
 .animate-particle { animation: particle-kill 1.5s ease-out forwards; }
 .animate-combo-pulse { animation: combo-pulse 0.5s ease-in-out infinite; }
+.animate-explosion { animation: explosion 1s ease-out forwards; }
+.animate-teleport { animation: teleport 1s ease-out forwards; }
+.animate-freeze { animation: freeze 1s ease-out forwards; }
+.animate-fade-in-out { animation: fade-in-out 1.5s ease-out forwards; }
 
 /* ========================================
    MAP STYLES - Professional Look

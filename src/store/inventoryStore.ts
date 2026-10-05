@@ -13,6 +13,7 @@ interface InventoryStore {
   collectMapItem: (mapItemId: string) => { type: string; amount?: number; def?: any } | null;
   useItem: (inventoryItemId: string) => { type: string; amount?: number } | void;
   tickEffects: (deltaMs: number) => void;
+  tickMagnetEffect: (playerLat: number, playerLng: number) => void;
   spawnMapItem: (lat: number, lng: number, defId?: string) => void;
   spawnRandomMapItems: (count: number, centerLat: number, centerLng: number) => void;
   removeMapItem: (id: string) => void;
@@ -135,6 +136,43 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
         shieldHP: newShieldHP,
       };
     });
+  },
+
+  tickMagnetEffect: (playerLat, playerLng) => {
+    const { activeEffects, mapItems } = get();
+    
+    // Verificar se há efeito de íman ativo
+    const magnetEffect = activeEffects.find(e => e.effect.magnetRange);
+    if (!magnetEffect) return;
+    
+    const magnetRange = magnetEffect.effect.magnetRange!;
+    const attractionSpeed = 0.0003; // Velocidade de atração
+    
+    set((state) => ({
+      mapItems: state.mapItems.map((item) => {
+        if (item.collected) return item;
+        
+        const dist = Math.sqrt(
+          Math.pow(item.lat - playerLat, 2) + Math.pow(item.lng - playerLng, 2)
+        );
+        
+        // Se o item está dentro do raio do íman, atraí-lo
+        if (dist <= magnetRange && dist > 0.0001) {
+          const dLat = playerLat - item.lat;
+          const dLng = playerLng - item.lng;
+          const dirLat = dLat / dist;
+          const dirLng = dLng / dist;
+          
+          return {
+            ...item,
+            lat: item.lat + dirLat * attractionSpeed,
+            lng: item.lng + dirLng * attractionSpeed,
+          };
+        }
+        
+        return item;
+      }),
+    }));
   },
 
   spawnMapItem: (lat, lng, defId) => {

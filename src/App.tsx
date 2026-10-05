@@ -27,6 +27,7 @@ import ParticleSystem from './components/ParticleSystem';
 import ComboSystem from './components/ComboSystem';
 import DifficultySystem from './components/DifficultySystem';
 import DayNightCycle from './components/DayNightCycle';
+import SpecialEffectsVisuals from './components/SpecialEffectsVisuals';
 
 export default function App() {
   const [started, setStarted] = useState(false);
@@ -182,6 +183,7 @@ export default function App() {
       <ComboSystem />
       <DifficultySystem />
       <DayNightCycle />
+      <SpecialEffectsVisuals />
 
       {/* ========== Game Over Screen ========== */}
       {!gameActive && player.health <= 0 && <GameOverScreen onRestart={handleRestart} />}
