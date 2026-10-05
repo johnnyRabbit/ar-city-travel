@@ -33,12 +33,12 @@ export default function QuestPanel() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="relative w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        className="relative w-11 h-11 bg-black/40 backdrop-blur-md rounded-xl shadow-lg flex items-center justify-center hover:bg-black/60 transition-all active:scale-95 border border-white/20"
         title="Missões"
       >
-        <span className="text-2xl">📜</span>
+        <span className="text-xl">📜</span>
         {completedCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white/30">
+          <span className="absolute -top-1 -right-1 bg-green-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white/30">
             {completedCount}
           </span>
         )}

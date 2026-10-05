@@ -74,44 +74,54 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     
+    // Calcular dano primeiro (fora do set)
+    let totalDamage = 0;
+    
     // Movimento realista com zigzag e variação de velocidade
-    set((state) => ({
-      zombies: state.zombies.map((z) => {
-        if (!z.active) return z;
-        
-        const dLat = state.player.lat - z.lat;
-        const dLng = state.player.lng - z.lng;
-        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-        
-        if (dist < 0.0001) {
-          get().damagePlayer(5);
-          return z;
-        }
-        
-        // Direção base para o jogador
-        const baseDirLat = dLat / dist;
-        const baseDirLng = dLng / dist;
-        
-        // Adicionar movimento errático (zigzag) - desvio aleatório
-        const wobbleAngle = (Math.random() - 0.5) * 0.8; // -0.4 a +0.4 radianos
-        const cosW = Math.cos(wobbleAngle);
-        const sinW = Math.sin(wobbleAngle);
-        
-        // Rotação da direção base pelo ângulo de wobble
-        const dirLat = baseDirLat * cosW - baseDirLng * sinW;
-        const dirLng = baseDirLat * sinW + baseDirLng * cosW;
-        
-        // Variação de velocidade (zombies não são perfeitamente consistentes)
-        const speedVariation = 0.8 + Math.random() * 0.4; // 80% a 120% da velocidade base
-        const currentSpeed = z.speed * speedVariation;
-        
-        return {
-          ...z,
-          lat: z.lat + dirLat * currentSpeed,
-          lng: z.lng + dirLng * currentSpeed,
-        };
-      }),
-    }));
+    const updatedZombies = get().zombies.map((z) => {
+      if (!z.active) return z;
+      
+      const player = get().player;
+      const dLat = player.lat - z.lat;
+      const dLng = player.lng - z.lng;
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+      
+      if (dist < 0.0001) {
+        totalDamage += 5;
+        return z;
+      }
+      
+      // Direção base para o jogador
+      const baseDirLat = dLat / dist;
+      const baseDirLng = dLng / dist;
+      
+      // Adicionar movimento errático (zigzag) - desvio aleatório
+      const wobbleAngle = (Math.random() - 0.5) * 0.8; // -0.4 a +0.4 radianos
+      const cosW = Math.cos(wobbleAngle);
+      const sinW = Math.sin(wobbleAngle);
+      
+      // Rotação da direção base pelo ângulo de wobble
+      const dirLat = baseDirLat * cosW - baseDirLng * sinW;
+      const dirLng = baseDirLat * sinW + baseDirLng * cosW;
+      
+      // Variação de velocidade (zombies não são perfeitamente consistentes)
+      const speedVariation = 0.8 + Math.random() * 0.4; // 80% a 120% da velocidade base
+      const currentSpeed = z.speed * speedVariation;
+      
+      return {
+        ...z,
+        lat: z.lat + dirLat * currentSpeed,
+        lng: z.lng + dirLng * currentSpeed,
+      };
+    });
+    
+    // Aplicar atualizações
+    set({ zombies: updatedZombies });
+    
+    // Aplicar dano DEPOIS do set (fora do set)
+    if (totalDamage > 0) {
+      get().damagePlayer(totalDamage);
+    }
   },
 
   damagePlayer: (amount, onDamage) => {

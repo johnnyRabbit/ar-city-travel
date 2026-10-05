@@ -21,10 +21,10 @@ export default function CitySelector() {
       {/* City Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-xl shadow-lg flex items-center justify-center hover:bg-black/60 transition-all active:scale-95 border border-white/20"
         title="Escolher Cidade"
       >
-        <span className="text-2xl">{currentCityConfig?.emoji}</span>
+        <span className="text-xl">{currentCityConfig?.emoji}</span>
       </button>
 
       {/* City Selection Modal */}
