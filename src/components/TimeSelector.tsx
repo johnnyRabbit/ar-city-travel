@@ -21,10 +21,10 @@ export default function TimeSelector() {
       {/* Botão Compacto */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 border-2 border-white/20"
+        className="w-11 h-11 bg-black/40 backdrop-blur-md rounded-xl shadow-lg flex items-center justify-center hover:bg-black/60 transition-all active:scale-95 border border-white/20"
         title="Selecionar Era"
       >
-        <span className="text-2xl">{currentEra.emoji}</span>
+        <span className="text-xl">{currentEra.emoji}</span>
       </button>
 
       {/* Painel Expandido */}
